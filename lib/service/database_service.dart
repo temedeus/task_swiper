@@ -22,4 +22,16 @@ class DatabaseService {
     return db.insert('Task', task.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
+
+  Future<List<Task>> getTasks() async {
+    final db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('Task');
+    return queryResult.map((e) => Task.fromMap(e)).toList();
+  }
+
+  Future<void> deleteTask(int id) async {
+    final db = await initializeDB();
+
+    await db.delete("Task", where: "id = ?", whereArgs: [id]);
+  }
 }

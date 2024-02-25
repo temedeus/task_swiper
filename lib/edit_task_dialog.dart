@@ -36,7 +36,15 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             ),
             TextButton(
               onPressed: () {
-                callback(myController.text);
+                if(myController.text.isNotEmpty) {
+                  callback(myController.text);
+                }
+              },
+              child: const Text('Save'),
+            ),
+            TextButton(
+              onPressed: () {
+               Navigator.pop(context);
               },
               child: const Text('Close'),
             ),
