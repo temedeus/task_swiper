@@ -1,7 +1,9 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:taskswiper/dismiss_task_dialog.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/task.dart';
+import 'package:taskswiper/task_item.dart';
 
 import 'edit_task_dialog.dart';
 
@@ -35,93 +37,83 @@ class _TaskListingState extends State<TaskListing> {
   @override
   build(BuildContext context) {
     return _isLoading
-        ? const Text("Loading")
+        ? const Center(child: CircularProgressIndicator())
         : Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              CarouselSlider(
-                options:
-                    CarouselOptions(height: 400.0, enableInfiniteScroll: false),
-                items: _tasks.map((i) {
-                  return Builder(
-                    builder: (BuildContext context) {
-                      return buildTaskItem(context, i);
-                    },
-                  );
-                }).toList(),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  textStyle: const TextStyle(fontSize: 20),
-                ),
-                onPressed: () => showDialog<String>(
-                  context: context,
-                  builder: (BuildContext context) => buildDialog(),
-                ),
-                child: const Text('Add note'),
-              ),
-            ],
+            children: buildTaskSlider(),
           );
   }
 
-  Container buildTaskItem(BuildContext context, Task i) {
-    return Container(
-        width: MediaQuery.of(context).size.width,
-        margin: const EdgeInsets.all(15.0),
-        padding: const EdgeInsets.all(15.0),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.grey[200]!,
-              Colors.grey[100]!,
-              Colors.grey[200]!,
-            ],
-            stops: [0.1, 0.5, 0.9],
-          ),
-          borderRadius: BorderRadius.circular(12.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              spreadRadius: 2,
-              blurRadius: 5,
-              offset: Offset(0, 3),
+  List<Widget> buildTaskSlider() {
+    return [
+      _tasks.isEmpty
+          ? const Center(child: Text("No tasks"))
+          : CarouselSlider(
+              options:
+                  CarouselOptions(height: 400.0, enableInfiniteScroll: false),
+              items: _tasks.map((i) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return buildDismissableTask(context, i);
+                  },
+                );
+              }).toList(),
             ),
-          ],
+      ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          textStyle: const TextStyle(fontSize: 20),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              child: IconButton(
-                icon: const Icon(
-                  Icons.delete,
-                  color: Colors.black45,
-                  size: 30.0,
-                ),
-                onPressed: () async {
-                  await _databaseService.deleteTask(i.id!);
+        onPressed: () => showDialog<String>(
+          context: context,
+          builder: (BuildContext context) => buildDialog(),
+        ),
+        child: const Text('Add task'),
+      )
+    ];
+  }
 
-                  setState(() {
-                    var newNotes = _tasks;
-                    newNotes.remove(i);
-                    _tasks = [...newNotes];
-                  });
-                },
-              ),
-              alignment: Alignment.topRight,
-            ),
-            Text(
-              i.task,
-              style: const TextStyle(
-                fontSize: 16.0,
-                color: Colors.black87,
-              ),
-            )
-          ],
-        ));
+  Dismissible buildDismissableTask(BuildContext context, Task i) {
+    return Dismissible(
+      key: UniqueKey(),
+      direction: DismissDirection.vertical,
+      onUpdate: (details) {},
+      confirmDismiss: (DismissDirection direction) async {
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            if (direction == DismissDirection.up) {
+              return DismissTaskDialog(
+                  () => deleteTask(i),
+                  "Complete task?",
+                  "Are you sure you wish to complete task?",
+                  "COMPLETE",
+                  "CANCEL");
+            } else {
+              return DismissTaskDialog(() => deleteTask(i), "Delete task?",
+                  "Are you sure you wish to delete task?", "DELETE", "CANCEL");
+            }
+          },
+        );
+      },
+      child: TaskItem(i),
+    );
+  }
+
+  deleteTask(i) async {
+    await _databaseService.deleteTask(i.id!);
+
+    setState(() {
+      var newNotes = _tasks;
+      newNotes.remove(i);
+      _tasks = [...newNotes];
+    });
+    Navigator.of(context).pop(true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Task deleted'),
+      ),
+    );
   }
 
   buildDialog() {
