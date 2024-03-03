@@ -4,6 +4,7 @@ import 'package:taskswiper/dismiss_task_dialog.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/task.dart';
 import 'package:taskswiper/task_item.dart';
+import 'package:taskswiper/task_list.dart';
 
 import 'edit_task_dialog.dart';
 
@@ -18,15 +19,21 @@ class _TaskListingState extends State<TaskListing> {
   late DatabaseService _databaseService;
   bool _isLoading = true;
   List<Task> _tasks = [];
+  List<TaskList> _taskLists = [];
 
   @override
   void initState() {
     super.initState();
     _databaseService = DatabaseService();
+    print("initializing");
     _databaseService.initializeDB().whenComplete(() async {
+      print("done");
       List<Task> tasks = await _databaseService.getTasks();
+      List<TaskList> taskLists = await _databaseService.getTaskLists();
       setState(() {
         _tasks = [...tasks];
+        _taskLists = [...taskLists];
+
         _isLoading = false;
       });
     });
@@ -118,10 +125,14 @@ class _TaskListingState extends State<TaskListing> {
 
   buildDialog() {
     callback(String text) async {
-      var id = await _databaseService.createItem(Task(null, text, null));
-      setState(() {
-        _tasks = [Task(id, text, null), ..._tasks];
-      });
+      if(_taskLists.isNotEmpty) {
+        var taskListId = _taskLists.first.id;
+        var id = await _databaseService.createItem(Task(null, text, null, taskListId!));
+        setState(() {
+          _tasks = [Task(id, text, null, taskListId), ..._tasks];
+        });
+      }
+
       Navigator.pop(context);
     }
 
