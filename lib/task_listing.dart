@@ -25,9 +25,7 @@ class _TaskListingState extends State<TaskListing> {
   void initState() {
     super.initState();
     _databaseService = DatabaseService();
-    print("initializing");
     _databaseService.initializeDB().whenComplete(() async {
-      print("done");
       List<Task> tasks = await _databaseService.getTasks();
       List<TaskList> taskLists = await _databaseService.getTaskLists();
       setState(() {
