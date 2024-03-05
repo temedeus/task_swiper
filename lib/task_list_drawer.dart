@@ -42,7 +42,15 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
               ),
               child: Text('Task lists'),
             ),
-            ...create(selectedTaskListIdProvider)
+            ...create(selectedTaskListIdProvider),
+            IconButton(
+              icon: const Icon(Icons.add),
+              alignment: Alignment.centerLeft,
+              tooltip: 'Add tasklist',
+              onPressed: () {
+
+              },
+            ),
           ],
         );
       }),
