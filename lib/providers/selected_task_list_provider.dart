@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:taskswiper/task_list.dart';
+
+import '../model/task_list.dart';
 
 class SelectedTaskListProvider extends ChangeNotifier {
   TaskList? _selectedTasklist;

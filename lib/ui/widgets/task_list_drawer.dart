@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:taskswiper/selected_task_list_provider.dart';
+import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
-import 'package:taskswiper/task_list.dart';
+
+import '../../model/task_list.dart';
 
 class TaskListDrawer extends StatefulWidget {
   @override
@@ -36,11 +37,25 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
         return ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
+            SizedBox(
+              height: 100,
+              child: DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  border: Border.all(
+                    color: Colors.grey[200]!,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey[400]!,
+                      blurRadius: 5,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Text('Task lists'),
               ),
-              child: Text('Task lists'),
             ),
             ...create(selectedTaskListIdProvider),
             IconButton(

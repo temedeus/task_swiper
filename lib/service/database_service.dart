@@ -1,8 +1,8 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:taskswiper/task.dart';
+import 'package:taskswiper/model/task.dart';
 
-import '../task_list.dart';
+import '../model/task_list.dart';
 
 class DatabaseService {
   Future<Database> initializeDB() async {

@@ -1,14 +1,14 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:taskswiper/dismiss_task_dialog.dart';
-import 'package:taskswiper/selected_task_list_provider.dart';
+import 'package:taskswiper/ui/dialogs/dismiss_task_dialog.dart';
+import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
-import 'package:taskswiper/task.dart';
-import 'package:taskswiper/task_item.dart';
-import 'package:taskswiper/task_list.dart';
+import 'package:taskswiper/model/task.dart';
+import 'package:taskswiper/ui/widgets/task_item.dart';
 
-import 'edit_task_dialog.dart';
+import '../dialogs/edit_task_dialog.dart';
+import '../../model/task_list.dart';
 
 class TaskListing extends StatefulWidget {
   TaskListing({Key? key}) : super(key: key);

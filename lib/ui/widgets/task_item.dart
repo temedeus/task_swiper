@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:taskswiper/task.dart';
+import 'package:taskswiper/model/task.dart';
 
 class TaskItem extends StatelessWidget {
   final Task task;
