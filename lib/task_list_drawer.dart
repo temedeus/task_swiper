@@ -12,7 +12,7 @@ class TaskListDrawer extends StatefulWidget {
 class _TaskListDrawerState extends State<TaskListDrawer> {
   late DatabaseService _databaseService;
   List<TaskList> _taskLists = [];
-  bool _isLoading = true;
+  late SelectedTaskListProvider _selectedTaskListProvider;
 
   @override
   void initState() {
@@ -22,30 +22,18 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
       List<TaskList> taskLists = await _databaseService.getTaskLists();
       setState(() {
         _taskLists = [...taskLists];
-
-        _isLoading = false;
       });
-    });
-  }
-
-  int _selectedIndex = 0;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
+      _selectedTaskListProvider = Provider.of<SelectedTaskListProvider>(context, listen: false);
+      _selectedTaskListProvider.setSelectedTaskListId(_taskLists.first);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      // Add a ListView to the drawer. This ensures the user can scroll
-      // through the options in the drawer if there isn't enough vertical
-      // space to fit everything.
       child: Consumer<SelectedTaskListProvider>(
           builder: (context, selectedTaskListIdProvider, _) {
         return ListView(
-          // Important: Remove any padding from the ListView.
           padding: EdgeInsets.zero,
           children: [
             const DrawerHeader(
@@ -54,19 +42,20 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
               ),
               child: Text('Task lists'),
             ),
-            ...create()
+            ...create(selectedTaskListIdProvider)
           ],
         );
       }),
     );
   }
 
-  Iterable<ListTile> create() {
+  Iterable<ListTile> create(SelectedTaskListProvider selectedTaskListIdProvider) {
     return _taskLists.map((i) {
       return ListTile(
           title: Text(i.title),
+          selected: i.id == selectedTaskListIdProvider.selectedTasklist?.id,
           onTap: () {
-            _onItemTapped(0);
+            selectedTaskListIdProvider.setSelectedTaskListId(i);
             Navigator.pop(context);
           });
     });

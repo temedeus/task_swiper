@@ -1,6 +1,8 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:taskswiper/dismiss_task_dialog.dart';
+import 'package:taskswiper/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/task.dart';
 import 'package:taskswiper/task_item.dart';
@@ -17,37 +19,55 @@ class TaskListing extends StatefulWidget {
 
 class _TaskListingState extends State<TaskListing> {
   late DatabaseService _databaseService;
-  bool _isLoading = true;
   List<Task> _tasks = [];
-  List<TaskList> _taskLists = [];
+  TaskList? _taskList;
+
+  _TaskListingState();
 
   @override
   void initState() {
     super.initState();
     _databaseService = DatabaseService();
-    _databaseService.initializeDB().whenComplete(() async {
-      List<Task> tasks = await _databaseService.getTasks();
-      List<TaskList> taskLists = await _databaseService.getTaskLists();
-      setState(() {
-        _tasks = [...tasks];
-        _taskLists = [...taskLists];
-
-        _isLoading = false;
-      });
-    });
   }
 
-  _TaskListingState();
-
   @override
-  build(BuildContext context) {
-    return _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: buildTaskSlider(),
-          );
+  Widget build(BuildContext context) {
+    return Consumer<SelectedTaskListProvider>(
+      builder: (context, selectedTaskListProvider, _) {
+        final selectedTasklist = selectedTaskListProvider.selectedTasklist;
+        if(selectedTasklist == null) {
+          loadingIndicator();
+        }
+        final taskListId = selectedTasklist?.id;
+
+        if (taskListId == null) {
+          return loadingIndicator();
+        }
+        return FutureBuilder<List<Task>>(
+          future: _databaseService.getTasks(taskListId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return loadingIndicator();
+            } else if (snapshot.hasError) {
+              return const Text("Something went wrong :(");
+            } else {
+              _tasks = snapshot.data ?? [];
+              _taskList = selectedTaskListProvider.selectedTasklist;
+
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: buildTaskSlider(),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
+  Center loadingIndicator() {
+    return const Center(child: CircularProgressIndicator());
   }
 
   List<Widget> buildTaskSlider() {
@@ -123,9 +143,11 @@ class _TaskListingState extends State<TaskListing> {
 
   buildDialog() {
     callback(String text) async {
-      if(_taskLists.isNotEmpty) {
-        var taskListId = _taskLists.first.id;
-        var id = await _databaseService.createItem(Task(null, text, null, taskListId!));
+      final _taskList = this._taskList;
+      if (_taskList != null) {
+        var taskListId = _taskList.id;
+        var id = await _databaseService
+            .createItem(Task(null, text, null, taskListId!));
         setState(() {
           _tasks = [Task(id, text, null, taskListId), ..._tasks];
         });

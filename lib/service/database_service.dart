@@ -8,16 +8,13 @@ class DatabaseService {
   Future<Database> initializeDB() async {
     String path = await getDatabasesPath();
 
-    print("initializiung");
     return openDatabase(
       join(path, 'task_database.db'),
       onCreate: (database, version) async {
-        print("onCreate CREATE TABLE taskLis");
 
        await database.execute(
           "CREATE TABLE taskList(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL)",
         );
-        print("CREATE TABLE taskLis");
         await database.execute(
           "CREATE TABLE task(id INTEGER PRIMARY KEY AUTOINCREMENT, " +
               "task TEXT NOT NULL, due TEXT, taskListId INTEGER NOT NULL, " +
@@ -45,9 +42,9 @@ class DatabaseService {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<List<Task>> getTasks() async {
+  Future<List<Task>> getTasks(int taskListId) async {
     final db = await initializeDB();
-    final List<Map<String, Object?>> queryResult = await db.query('task');
+    final List<Map<String, Object?>> queryResult = await db.query('task', where: "taskListId = ?", whereArgs: [taskListId]);
     return queryResult.map((e) => Task.fromMap(e)).toList();
   }
 
