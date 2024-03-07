@@ -48,6 +48,12 @@ class DatabaseService {
     return queryResult.map((e) => Task.fromMap(e)).toList();
   }
 
+  Future<TaskList> getDefaultTaskList() async {
+    final db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('taskList');
+    // TODO: default user settings
+    return queryResult.map((e) => TaskList.fromMap(e)).toList().first;
+  }
 
   Future<List<TaskList>> getTaskLists() async {
     final db = await initializeDB();

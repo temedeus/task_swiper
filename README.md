@@ -1,6 +1,6 @@
 # taskswiper
 
-Task swiper. Quick daily task management.
+Task swiper. Quick, daily task management.
 
 ## Getting Started
 

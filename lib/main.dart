@@ -42,9 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: TaskListing(),
-      drawer: Drawer(
-        child: TaskListDrawer(),
-      ),
+      drawer: TaskListDrawer()
     );
   }
 }

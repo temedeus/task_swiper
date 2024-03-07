@@ -1,14 +1,14 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:taskswiper/ui/dialogs/dismiss_task_dialog.dart';
+import 'package:taskswiper/model/task.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
-import 'package:taskswiper/model/task.dart';
+import 'package:taskswiper/ui/dialogs/dismiss_task_dialog.dart';
 import 'package:taskswiper/ui/widgets/task_item.dart';
 
-import '../dialogs/edit_task_dialog.dart';
 import '../../model/task_list.dart';
+import '../dialogs/edit_task_dialog.dart';
 
 class TaskListing extends StatefulWidget {
   TaskListing({Key? key}) : super(key: key);
@@ -28,6 +28,13 @@ class _TaskListingState extends State<TaskListing> {
   void initState() {
     super.initState();
     _databaseService = DatabaseService();
+    _databaseService = DatabaseService();
+    _databaseService.initializeDB().whenComplete(() async {
+      TaskList taskList = await _databaseService.getDefaultTaskList();
+      setState(() {
+        _taskList = taskList;
+      });
+    });
   }
 
   @override
@@ -35,16 +42,17 @@ class _TaskListingState extends State<TaskListing> {
     return Consumer<SelectedTaskListProvider>(
       builder: (context, selectedTaskListProvider, _) {
         final selectedTasklist = selectedTaskListProvider.selectedTasklist;
-        if(selectedTasklist == null) {
-          loadingIndicator();
-        }
-        final taskListId = selectedTasklist?.id;
+        _taskList = (selectedTasklist == null || selectedTasklist.id == null)
+            ? _taskList
+            : selectedTasklist;
 
-        if (taskListId == null) {
+        if(_taskList == null || _taskList?.id == null) {
           return loadingIndicator();
         }
+        final taskListId = _taskList?.id;
+
         return FutureBuilder<List<Task>>(
-          future: _databaseService.getTasks(taskListId),
+          future: _databaseService.getTasks(taskListId!),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return loadingIndicator();

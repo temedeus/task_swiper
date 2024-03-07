@@ -13,7 +13,6 @@ class TaskListDrawer extends StatefulWidget {
 class _TaskListDrawerState extends State<TaskListDrawer> {
   late DatabaseService _databaseService;
   List<TaskList> _taskLists = [];
-  late SelectedTaskListProvider _selectedTaskListProvider;
 
   @override
   void initState() {
@@ -24,8 +23,6 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
       setState(() {
         _taskLists = [...taskLists];
       });
-      _selectedTaskListProvider = Provider.of<SelectedTaskListProvider>(context, listen: false);
-      _selectedTaskListProvider.setSelectedTaskListId(_taskLists.first);
     });
   }
 
