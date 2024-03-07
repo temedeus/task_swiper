@@ -9,7 +9,7 @@ class DismissTaskDialog extends StatelessWidget {
   final String primary;
   final String cancel;
 
-  DismissTaskDialog(this.callback, this.title, this.content, this.primary, this.cancel);
+  const DismissTaskDialog(this.callback, this.title, this.content, this.primary, this.cancel, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
