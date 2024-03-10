@@ -66,4 +66,16 @@ class DatabaseService {
 
     await db.delete("task", where: "id = ?", whereArgs: [id]);
   }
+
+  Future<void> deleteTasks(List<int> id) async {
+    final db = await initializeDB();
+
+    await db.delete("task", where: "id IN (?)", whereArgs: [id]);
+  }
+
+  Future<void> deleteTasklist(int id) async {
+    final db = await initializeDB();
+
+    await db.delete("taskList", where: "id = ?", whereArgs: [id]);
+  }
 }

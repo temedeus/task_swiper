@@ -11,4 +11,9 @@ class SelectedTaskListProvider extends ChangeNotifier {
     _selectedTasklist = taskList;
     notifyListeners();
   }
+
+  void deselectSelectedTaskList() {
+    _selectedTasklist = null;
+    notifyListeners();
+  }
 }

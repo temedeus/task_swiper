@@ -12,7 +12,7 @@ class TaskListDrawer extends StatefulWidget {
 }
 
 class _TaskListDrawerState extends State<TaskListDrawer> {
-  // TODO: refactor database handling away from here.
+  // TODO: refactor database handling up one level from here.
   late DatabaseService _databaseService;
   List<TaskList> _taskLists = [];
 
@@ -33,49 +33,61 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
     return Drawer(
       child: Consumer<SelectedTaskListProvider>(
           builder: (context, selectedTaskListIdProvider, _) {
-            return ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                SizedBox(
-                  height: 100,
-                  child: DrawerHeader(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      border: Border.all(
-                        color: Colors.grey[200]!,
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey[400]!,
-                          blurRadius: 5,
-                          offset: Offset(0, 3),
-                        ),
+        return ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            SizedBox(
+              height: 100,
+              child: DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  border: Border.all(
+                    color: Colors.grey[200]!,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey[400]!,
+                      blurRadius: 5,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Text('Task lists'),
+              ),
+            ),
+            ...create(selectedTaskListIdProvider),
+            SizedBox(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: IntrinsicWidth(
+                  child: ElevatedButton(
+                    onPressed: () {  showDialog(
+                        context: context,
+                        builder: (BuildContext) => buildDialog());
+                      },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    ),
+                    child: const Row(
+                      children: [
+                        Text("Add tasklist"),
+                        Icon(Icons.add),
                       ],
                     ),
-                    child: Text('Task lists'),
                   ),
                 ),
-                ...create(selectedTaskListIdProvider),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  alignment: Alignment.centerLeft,
-                  tooltip: 'Add tasklist',
-                  onPressed: () {
-                    showDialog(context: context, builder: (BuildContext) => buildDialog());
-                  },
-                ),
-              ],
-            );
-          }),
+              ),
+            ),
+          ],
+        );
+      }),
     );
   }
 
-
   buildDialog() {
     callback(String text) async {
-      var id = await _databaseService
-          .createTasklist(TaskList(null, text));
+      var id = await _databaseService.createTasklist(TaskList(null, text));
       setState(() {
         _taskLists = [..._taskLists, TaskList(id, text)];
       });
@@ -85,7 +97,6 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
 
     return AddTaskListDialog(callback: callback);
   }
-
 
   Iterable<ListTile> create(
       SelectedTaskListProvider selectedTaskListIdProvider) {

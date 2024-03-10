@@ -18,6 +18,7 @@ class TaskListing extends StatefulWidget {
 }
 
 class _TaskListingState extends State<TaskListing> {
+  // TODO: refactor database handling up one level from here.
   late DatabaseService _databaseService;
   List<Task> _tasks = [];
   TaskList? _taskList;
@@ -46,8 +47,8 @@ class _TaskListingState extends State<TaskListing> {
             ? _taskList
             : selectedTasklist;
 
-        if(_taskList == null || _taskList?.id == null) {
-          return loadingIndicator();
+        if (_taskList == null || _taskList?.id == null) {
+          return const Center(child: Text("Please select or create new task list!"));
         }
         final taskListId = _taskList?.id;
 
@@ -57,15 +58,50 @@ class _TaskListingState extends State<TaskListing> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return loadingIndicator();
             } else if (snapshot.hasError) {
-              return const Text("Something went wrong :(");
+              return const Center(child: Text("Something went wrong :("));
             } else {
               _tasks = snapshot.data ?? [];
               _taskList = selectedTaskListProvider.selectedTasklist;
 
               return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
-                children: buildTaskSlider(),
+                children: [
+                  SizedBox(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: IntrinsicWidth(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            showDialog(
+                                context: context,
+                                builder: (context) =>
+                                    buildDeleteTasklistConfirmationDialog(selectedTaskListProvider));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                          ),
+                          child: const Row(
+                            children: [
+                              Text("Delete tasklist"),
+                              Icon(Icons.delete),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: buildTaskSlider(),
+                      ),
+                    ),
+                  ),
+                ],
               );
             }
           },
@@ -118,12 +154,12 @@ class _TaskListingState extends State<TaskListing> {
             if (direction == DismissDirection.up) {
               return DismissTaskDialog(
                   () => deleteTask(i),
-                  "Complete task?",
+                  "COMPLETE TASK",
                   "Are you sure you wish to complete task?",
                   "COMPLETE",
                   "CANCEL");
             } else {
-              return DismissTaskDialog(() => deleteTask(i), "Delete task?",
+              return DismissTaskDialog(() => deleteTask(i), "DELETE TASK",
                   "Are you sure you wish to delete task?", "DELETE", "CANCEL");
             }
           },
@@ -131,6 +167,13 @@ class _TaskListingState extends State<TaskListing> {
       },
       child: TaskItem(i),
     );
+  }
+
+  Widget buildDeleteTasklistConfirmationDialog(SelectedTaskListProvider selectedTaskListIdProvider) {
+    return DismissTaskDialog(() {
+      deleteTasklist(selectedTaskListIdProvider);
+    }, "DELETE TASKLIST", "Are you sure you wish to delete task list?",
+        "DELETE", "CANCEL");
   }
 
   deleteTask(i) async {
@@ -145,6 +188,29 @@ class _TaskListingState extends State<TaskListing> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Task deleted'),
+      ),
+    );
+  }
+
+  deleteTasklist(SelectedTaskListProvider selectedTaskListIdProvider) async {
+    await _databaseService
+        .deleteTasks(_tasks.map((e) => e.id).whereType<int>().toList());
+
+    final id = _taskList?.id;
+    final taskListTitle = _taskList?.title;
+
+    await _databaseService.deleteTasklist(id!);
+    selectedTaskListIdProvider.deselectSelectedTaskList();
+
+    setState(() {
+      _tasks = [];
+      _taskList = null;
+    });
+
+    Navigator.of(context).pop(true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Task list "$taskListTitle" deleted'),
       ),
     );
   }
