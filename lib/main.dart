@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
+import 'package:taskswiper/service/service_locator.dart';
 import 'package:taskswiper/ui/screens/task_listing.dart';
 import 'package:taskswiper/ui/widgets/task_list_drawer.dart';
 
 void main() {
+  setupServiceLocator();
   runApp(const MyApp());
 }
 

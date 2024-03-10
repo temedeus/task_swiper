@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:taskswiper/model/task.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
+import 'package:taskswiper/service/service_locator.dart';
 import 'package:taskswiper/ui/dialogs/dismiss_task_dialog.dart';
 import 'package:taskswiper/ui/widgets/task_item.dart';
 
@@ -28,14 +29,12 @@ class _TaskListingState extends State<TaskListing> {
   @override
   void initState() {
     super.initState();
-    _databaseService = DatabaseService();
-    _databaseService = DatabaseService();
-    _databaseService.initializeDB().whenComplete(() async {
-      TaskList taskList = await _databaseService.getDefaultTaskList();
+    _databaseService = locator<DatabaseService>();
+    _databaseService.getDefaultTaskList().then((taskList) {
       setState(() {
         _taskList = taskList;
       });
-    });
+    }).catchError((error) {});
   }
 
   @override
@@ -48,7 +47,8 @@ class _TaskListingState extends State<TaskListing> {
             : selectedTasklist;
 
         if (_taskList == null || _taskList?.id == null) {
-          return const Center(child: Text("Please select or create new task list!"));
+          return const Center(
+              child: Text("Please select or create new task list!"));
         }
         final taskListId = _taskList?.id;
 
@@ -76,7 +76,8 @@ class _TaskListingState extends State<TaskListing> {
                             showDialog(
                                 context: context,
                                 builder: (context) =>
-                                    buildDeleteTasklistConfirmationDialog(selectedTaskListProvider));
+                                    buildDeleteTasklistConfirmationDialog(
+                                        selectedTaskListProvider));
                           },
                           style: ElevatedButton.styleFrom(
                             padding:
@@ -169,7 +170,8 @@ class _TaskListingState extends State<TaskListing> {
     );
   }
 
-  Widget buildDeleteTasklistConfirmationDialog(SelectedTaskListProvider selectedTaskListIdProvider) {
+  Widget buildDeleteTasklistConfirmationDialog(
+      SelectedTaskListProvider selectedTaskListIdProvider) {
     return DismissTaskDialog(() {
       deleteTasklist(selectedTaskListIdProvider);
     }, "DELETE TASKLIST", "Are you sure you wish to delete task list?",

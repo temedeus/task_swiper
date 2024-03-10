@@ -28,6 +28,7 @@ dependencies:
   sqflite: ^2.3.0
   path: ^1.8.0
   provider: ^5.0.0
+  get_it: ^7.6.7
 
 
   cupertino_icons: ^1.0.2

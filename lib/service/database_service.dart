@@ -5,14 +5,24 @@ import 'package:taskswiper/model/task.dart';
 import '../model/task_list.dart';
 
 class DatabaseService {
-  Future<Database> initializeDB() async {
-    String path = await getDatabasesPath();
+  static final DatabaseService _instance = DatabaseService._internal();
 
-    return openDatabase(
+  factory DatabaseService() {
+    return _instance;
+  }
+
+  late final Database _database;
+
+  DatabaseService._internal() {
+    _initializeDB();
+  }
+
+  Future<void> _initializeDB() async {
+    String path = await getDatabasesPath();
+    _database = await openDatabase(
       join(path, 'task_database.db'),
       onCreate: (database, version) async {
-
-       await database.execute(
+        await database.execute(
           "CREATE TABLE taskList(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL)",
         );
         await database.execute(
@@ -21,7 +31,7 @@ class DatabaseService {
               "FOREIGN KEY(taskListId) REFERENCES taskList(id))",
         );
 
-       // Create default items.
+        // Create default items.
         await database.execute(
           "INSERT INTO taskList (title) VALUES ('Untitled list');",
         );
@@ -31,51 +41,43 @@ class DatabaseService {
   }
 
   Future<int> createItem(Task task) async {
-    final Database db = await initializeDB();
-    return db.insert('task', task.toMap(),
+    return _database.insert('task', task.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<int> createTasklist(TaskList taskList) async {
-    final Database db = await initializeDB();
-    return db.insert('taskList', taskList.toMap(),
+    return _database.insert('taskList', taskList.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<Task>> getTasks(int taskListId) async {
-    final db = await initializeDB();
-    final List<Map<String, Object?>> queryResult = await db.query('task', where: "taskListId = ?", whereArgs: [taskListId]);
+    final List<Map<String, Object?>> queryResult = await _database
+        .query('task', where: "taskListId = ?", whereArgs: [taskListId]);
     return queryResult.map((e) => Task.fromMap(e)).toList();
   }
 
   Future<TaskList> getDefaultTaskList() async {
-    final db = await initializeDB();
-    final List<Map<String, Object?>> queryResult = await db.query('taskList');
+    final List<Map<String, Object?>> queryResult =
+        await _database.query('taskList');
     // TODO: default user settings
-    return queryResult.map((e) => TaskList.fromMap(e)).toList().first;
+    return TaskList.fromMap(queryResult.first);
   }
 
   Future<List<TaskList>> getTaskLists() async {
-    final db = await initializeDB();
-    final List<Map<String, Object?>> queryResult = await db.query('taskList');
+    final List<Map<String, Object?>> queryResult =
+        await _database.query('taskList');
     return queryResult.map((e) => TaskList.fromMap(e)).toList();
   }
 
   Future<void> deleteTask(int id) async {
-    final db = await initializeDB();
-
-    await db.delete("task", where: "id = ?", whereArgs: [id]);
+    await _database.delete("task", where: "id = ?", whereArgs: [id]);
   }
 
   Future<void> deleteTasks(List<int> id) async {
-    final db = await initializeDB();
-
-    await db.delete("task", where: "id IN (?)", whereArgs: [id]);
+    await _database.delete("task", where: "id IN (?)", whereArgs: [id]);
   }
 
   Future<void> deleteTasklist(int id) async {
-    final db = await initializeDB();
-
-    await db.delete("taskList", where: "id = ?", whereArgs: [id]);
+    await _database.delete("taskList", where: "id = ?", whereArgs: [id]);
   }
 }

@@ -5,6 +5,7 @@ import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/ui/dialogs/add_task_list_dialog.dart';
 
 import '../../model/task_list.dart';
+import '../../service/service_locator.dart';
 
 class TaskListDrawer extends StatefulWidget {
   @override
@@ -19,12 +20,13 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
   @override
   void initState() {
     super.initState();
-    _databaseService = DatabaseService();
-    _databaseService.initializeDB().whenComplete(() async {
-      List<TaskList> taskLists = await _databaseService.getTaskLists();
+    _databaseService = locator<DatabaseService>();
+
+    _databaseService.getTaskLists().then((taskLists) {
       setState(() {
-        _taskLists = [...taskLists];
+        _taskLists = List<TaskList>.from(taskLists);
       });
+    }).catchError((error) {
     });
   }
 
@@ -33,55 +35,56 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
     return Drawer(
       child: Consumer<SelectedTaskListProvider>(
           builder: (context, selectedTaskListIdProvider, _) {
-        return ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            SizedBox(
-              height: 100,
-              child: DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  border: Border.all(
-                    color: Colors.grey[200]!,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey[400]!,
-                      blurRadius: 5,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Text('Task lists'),
-              ),
-            ),
-            ...create(selectedTaskListIdProvider),
-            SizedBox(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: IntrinsicWidth(
-                  child: ElevatedButton(
-                    onPressed: () {  showDialog(
-                        context: context,
-                        builder: (BuildContext) => buildDialog());
-                      },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    ),
-                    child: const Row(
-                      children: [
-                        Text("Add tasklist"),
-                        Icon(Icons.add),
+            return ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                SizedBox(
+                  height: 100,
+                  child: DrawerHeader(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      border: Border.all(
+                        color: Colors.grey[200]!,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey[400]!,
+                          blurRadius: 5,
+                          offset: Offset(0, 3),
+                        ),
                       ],
                     ),
+                    child: Text('Task lists'),
                   ),
                 ),
-              ),
-            ),
-          ],
-        );
-      }),
+                ...create(selectedTaskListIdProvider),
+                SizedBox(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: IntrinsicWidth(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext) => buildDialog());
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        ),
+                        child: const Row(
+                          children: [
+                            Text("Add tasklist"),
+                            Icon(Icons.add),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }),
     );
   }
 
