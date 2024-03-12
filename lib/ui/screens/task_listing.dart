@@ -223,9 +223,9 @@ class _TaskListingState extends State<TaskListing> {
       if (_taskList != null) {
         var taskListId = _taskList.id;
         var id = await _databaseService
-            .createItem(Task(null, text, null, taskListId!));
+            .createItem(Task(null, text, taskListId!));
         setState(() {
-          _tasks = [Task(id, text, null, taskListId), ..._tasks];
+          _tasks = [Task(id, text, taskListId), ..._tasks];
         });
       }
 

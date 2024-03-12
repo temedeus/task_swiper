@@ -27,13 +27,22 @@ class DatabaseService {
         );
         await database.execute(
           "CREATE TABLE task(id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-              "task TEXT NOT NULL, due TEXT, taskListId INTEGER NOT NULL, " +
+              "task TEXT NOT NULL, taskListId INTEGER NOT NULL, " +
               "FOREIGN KEY(taskListId) REFERENCES taskList(id))",
         );
 
         // Create default items.
-        await database.execute(
+        int id = await database.rawInsert(
           "INSERT INTO taskList (title) VALUES ('Untitled list');",
+        );
+
+        // Create default items.
+        await database.execute(
+          "INSERT INTO task (task, taskListId) VALUES ('Start using Task Swiper:\n " +
+              "Create new lists from the menu on the right.\n\n"
+              "Swipe task up to complete\n\n " +
+              "Swipe task down to delete\n\n"
+            "', ?);", [id]
         );
       },
       version: 1,
