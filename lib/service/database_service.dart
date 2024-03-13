@@ -13,11 +13,9 @@ class DatabaseService {
 
   late final Database _database;
 
-  DatabaseService._internal() {
-    _initializeDB();
-  }
+  DatabaseService._internal();
 
-  Future<void> _initializeDB() async {
+  Future<void> initializeDB() async {
     String path = await getDatabasesPath();
     _database = await openDatabase(
       join(path, 'task_database.db'),

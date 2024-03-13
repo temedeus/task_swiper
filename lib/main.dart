@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
+import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/service/service_locator.dart';
 import 'package:taskswiper/ui/screens/task_listing.dart';
 import 'package:taskswiper/ui/widgets/task_list_drawer.dart';
@@ -37,14 +38,27 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool isReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    locator<DatabaseService>().initializeDB().whenComplete(
+          () => setState(
+            () {
+              isReady = true;
+            },
+          ),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: TaskListing(),
-      drawer: TaskListDrawer()
-    );
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: this.isReady ? TaskListing() : Center(child: Text("Starting up..."),),
+        drawer: TaskListDrawer());
   }
 }
