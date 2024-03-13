@@ -67,7 +67,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                     onPressed: () {
                       showDialog(
                           context: context,
-                          builder: (BuildContext) => buildDialog());
+                          builder: (BuildContext) => buildCreateTasklistDialog());
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -88,7 +88,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
     );
   }
 
-  buildDialog() {
+  buildCreateTasklistDialog() {
     callback(String text) async {
       var id = await _databaseService.createTasklist(TaskList(null, text));
       setState(() {
