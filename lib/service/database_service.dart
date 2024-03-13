@@ -36,9 +36,9 @@ class DatabaseService {
 
         // Create default items.
         await database.execute(
-          "INSERT INTO task (task, taskListId) VALUES ('Start using Task Swiper:\n " +
+          "INSERT INTO task (task, taskListId) VALUES ('Start using Task Swiper!\n\n " +
               "Create new lists from the menu on the right.\n\n"
-              "Swipe task up to complete\n\n " +
+              "Swipe task up to complete\n\n" +
               "Swipe task down to delete\n\n"
             "', ?);", [id]
         );
@@ -80,8 +80,8 @@ class DatabaseService {
     await _database.delete("task", where: "id = ?", whereArgs: [id]);
   }
 
-  Future<void> deleteTasks(List<int> id) async {
-    await _database.delete("task", where: "id IN (?)", whereArgs: [id]);
+  Future<void> deleteTasksByTaskList(int taskListId) async {
+    await _database.delete("task", where: "taskListId = ?", whereArgs: [taskListId]);
   }
 
   Future<void> deleteTasklist(int id) async {

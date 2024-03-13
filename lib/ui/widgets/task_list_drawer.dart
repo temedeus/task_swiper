@@ -6,6 +6,7 @@ import 'package:taskswiper/ui/dialogs/add_task_list_dialog.dart';
 
 import '../../model/task_list.dart';
 import '../../service/service_locator.dart';
+import '../dialogs/dismiss_task_dialog.dart';
 
 class TaskListDrawer extends StatefulWidget {
   @override
@@ -26,8 +27,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
       setState(() {
         _taskLists = List<TaskList>.from(taskLists);
       });
-    }).catchError((error) {
-    });
+    }).catchError((error) {});
   }
 
   @override
@@ -35,56 +35,56 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
     return Drawer(
       child: Consumer<SelectedTaskListProvider>(
           builder: (context, selectedTaskListIdProvider, _) {
-            return ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                SizedBox(
-                  height: 100,
-                  child: DrawerHeader(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      border: Border.all(
-                        color: Colors.grey[200]!,
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey[400]!,
-                          blurRadius: 5,
-                          offset: Offset(0, 3),
-                        ),
+        return ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            SizedBox(
+              height: 100,
+              child: DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  border: Border.all(
+                    color: Colors.grey[200]!,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey[400]!,
+                      blurRadius: 5,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Text('Task lists'),
+              ),
+            ),
+            ...createTaskListItems(selectedTaskListIdProvider),
+            SizedBox(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: IntrinsicWidth(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext) => buildDialog());
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    ),
+                    child: const Row(
+                      children: [
+                        Text("Add tasklist"),
+                        Icon(Icons.add),
                       ],
                     ),
-                    child: Text('Task lists'),
                   ),
                 ),
-                ...create(selectedTaskListIdProvider),
-                SizedBox(
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: IntrinsicWidth(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (BuildContext) => buildDialog());
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        ),
-                        child: const Row(
-                          children: [
-                            Text("Add tasklist"),
-                            Icon(Icons.add),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }),
+              ),
+            ),
+          ],
+        );
+      }),
     );
   }
 
@@ -101,16 +101,71 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
     return AddTaskListDialog(callback: callback);
   }
 
-  Iterable<ListTile> create(
-      SelectedTaskListProvider selectedTaskListIdProvider) {
+  Iterable<Widget> createTaskListItems(
+      SelectedTaskListProvider selectedTaskListProvider) {
     return _taskLists.map((i) {
-      return ListTile(
-          title: Text(i.title),
-          selected: i.id == selectedTaskListIdProvider.selectedTasklist?.id,
-          onTap: () {
-            selectedTaskListIdProvider.setSelectedTaskListId(i);
-            Navigator.pop(context);
-          });
+      return Row(
+        children: [
+          Expanded(
+            child: ListTile(
+              title: Text(i.title),
+              selected: i.id == selectedTaskListProvider.selectedTasklist?.id,
+              onTap: () {
+                selectedTaskListProvider.setSelectedTaskListId(i);
+                Navigator.pop(context);
+              },
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () {
+              // Handle edit button tap here
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (context) => buildDeleteTasklistConfirmationDialog(
+                      i, selectedTaskListProvider));
+            },
+          ),
+        ],
+      );
     });
+  }
+
+  Widget buildDeleteTasklistConfirmationDialog(
+      TaskList taskList, SelectedTaskListProvider selectedTaskListIdProvider) {
+    return DismissTaskDialog(() {
+      deleteTasklist(taskList, selectedTaskListIdProvider);
+    }, "DELETE TASKLIST", "Are you sure you wish to delete task list?",
+        "DELETE", "CANCEL");
+  }
+
+  deleteTasklist(TaskList taskList,
+      SelectedTaskListProvider selectedTaskListProvider) async {
+    await _databaseService.deleteTasksByTaskList(taskList.id!);
+
+    final id = taskList.id;
+    final taskListTitle = taskList.title;
+
+    await _databaseService.deleteTasklist(id!);
+    selectedTaskListProvider.deselectSelectedTaskList();
+
+    List<TaskList> newTaskLists = List.from(_taskLists);
+    newTaskLists.remove(taskList);
+
+    setState(() {
+      _taskLists = newTaskLists;
+    });
+
+    Navigator.of(context).pop(true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Task list "$taskListTitle" deleted'),
+      ),
+    );
   }
 }

@@ -67,32 +67,6 @@ class _TaskListingState extends State<TaskListing> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: IntrinsicWidth(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            showDialog(
-                                context: context,
-                                builder: (context) =>
-                                    buildDeleteTasklistConfirmationDialog(
-                                        selectedTaskListProvider));
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                          ),
-                          child: const Row(
-                            children: [
-                              Text("Delete tasklist"),
-                              Icon(Icons.delete),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                   Expanded(
                     child: Center(
                       child: Column(
@@ -170,13 +144,6 @@ class _TaskListingState extends State<TaskListing> {
     );
   }
 
-  Widget buildDeleteTasklistConfirmationDialog(
-      SelectedTaskListProvider selectedTaskListIdProvider) {
-    return DismissTaskDialog(() {
-      deleteTasklist(selectedTaskListIdProvider);
-    }, "DELETE TASKLIST", "Are you sure you wish to delete task list?",
-        "DELETE", "CANCEL");
-  }
 
   deleteTask(i) async {
     await _databaseService.deleteTask(i.id!);
@@ -194,28 +161,7 @@ class _TaskListingState extends State<TaskListing> {
     );
   }
 
-  deleteTasklist(SelectedTaskListProvider selectedTaskListIdProvider) async {
-    await _databaseService
-        .deleteTasks(_tasks.map((e) => e.id).whereType<int>().toList());
 
-    final id = _taskList?.id;
-    final taskListTitle = _taskList?.title;
-
-    await _databaseService.deleteTasklist(id!);
-    selectedTaskListIdProvider.deselectSelectedTaskList();
-
-    setState(() {
-      _tasks = [];
-      _taskList = null;
-    });
-
-    Navigator.of(context).pop(true);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Task list "$taskListTitle" deleted'),
-      ),
-    );
-  }
 
   buildDialog() {
     callback(String text) async {
