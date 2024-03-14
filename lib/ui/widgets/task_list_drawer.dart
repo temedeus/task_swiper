@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:taskswiper/model/task.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/ui/dialogs/add_task_list_dialog.dart';
@@ -51,11 +52,11 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                     BoxShadow(
                       color: Colors.grey[400]!,
                       blurRadius: 5,
-                      offset: Offset(0, 3),
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-                child: Text('Task lists'),
+                child: const Text('Task lists'),
               ),
             ),
             ...createTaskListItems(selectedTaskListIdProvider),
@@ -67,7 +68,8 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                     onPressed: () {
                       showDialog(
                           context: context,
-                          builder: (BuildContext) => buildCreateTasklistDialog());
+                          builder: (BuildContext) =>
+                              buildCreateTasklistDialog());
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -88,38 +90,61 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
     );
   }
 
-  buildCreateTasklistDialog() {
+  buildCreateTasklistDialog({TaskList? taskList}) {
     callback(String text) async {
-      var id = await _databaseService.createTasklist(TaskList(null, text));
-      setState(() {
-        _taskLists = [..._taskLists, TaskList(id, text)];
-      });
+      if (taskList == null) {
+        // Create a new task list
+        var id = await _databaseService.createTasklist(TaskList(null, text));
+        setState(() {
+          _taskLists = [..._taskLists, TaskList(id, text)];
+        });
+      } else {
 
+        // Update the task list in _taskLists
+        var updatedTaskLists = _taskLists.map((existingTaskList) {
+          if (existingTaskList.id == taskList.id) {
+            return TaskList(
+              existingTaskList.id,
+              text,
+            );
+          } else {
+            return existingTaskList;
+          }
+        }).toList();
+
+        await _databaseService.updateTasklist(taskList);
+        setState(() {
+          _taskLists = updatedTaskLists;
+        });
+      }
       Navigator.pop(context);
     }
 
-    return AddTaskListDialog(callback: callback);
+    return AddTaskListDialog(callback: callback, defaultText: taskList?.title);
   }
 
   Iterable<Widget> createTaskListItems(
       SelectedTaskListProvider selectedTaskListProvider) {
-    return _taskLists.map((i) {
+    return _taskLists.map((taskList) {
       return Row(
         children: [
           Expanded(
             child: ListTile(
-              title: Text(i.title),
-              selected: i.id == selectedTaskListProvider.selectedTasklist?.id,
+              title: Text(taskList.title),
+              selected: taskList.id == selectedTaskListProvider.selectedTasklist?.id,
               onTap: () {
-                selectedTaskListProvider.setSelectedTaskListId(i);
+                selectedTaskListProvider.setSelectedTaskListId(taskList);
                 Navigator.pop(context);
               },
             ),
           ),
           IconButton(
-            icon: Icon(Icons.edit),
+            icon: const Icon(Icons.edit),
             onPressed: () {
-              // Handle edit button tap here
+              showDialog(
+                  context: context,
+                  builder: (BuildContext) =>
+                      buildCreateTasklistDialog(taskList: taskList));
             },
           ),
           IconButton(
@@ -128,7 +153,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
               showDialog(
                   context: context,
                   builder: (context) => buildDeleteTasklistConfirmationDialog(
-                      i, selectedTaskListProvider));
+                      taskList, selectedTaskListProvider));
             },
           ),
         ],

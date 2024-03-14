@@ -57,6 +57,11 @@ class DatabaseService {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  Future<int> updateTasklist(TaskList taskList) async {
+    return _database.update('taskList', taskList.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   Future<List<Task>> getTasks(int taskListId) async {
     final List<Map<String, Object?>> queryResult = await _database
         .query('task', where: "taskListId = ?", whereArgs: [taskListId]);

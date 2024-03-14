@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
 
 class AddTaskListDialog extends StatefulWidget {
-  const AddTaskListDialog({Key? key, required this.callback}) : super(key: key);
+  const AddTaskListDialog({Key? key, required this.callback, this.defaultText}) : super(key: key);
   final Function(String) callback;
-
+  final String? defaultText;
   @override
-  State<AddTaskListDialog> createState() => _AddTaskListDialogState(callback);
+  State<AddTaskListDialog> createState() => _AddTaskListDialogState(callback, defaultText);
 }
 
 class _AddTaskListDialogState extends State<AddTaskListDialog> {
   final myController = TextEditingController();
 
   Function(String) callback;
+  final String? defaultText;
 
-  _AddTaskListDialogState(this.callback);
+  _AddTaskListDialogState(this.callback, this.defaultText);
+
+  @override
+  void initState() {
+    if(defaultText != null) {
+      myController.text = defaultText!;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
