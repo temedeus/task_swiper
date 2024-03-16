@@ -25,7 +25,7 @@ class DismissTaskDialog extends StatelessWidget {
           child: Text(cancel),
         ),
       ],
-    );;
+    );
   }
   
 }

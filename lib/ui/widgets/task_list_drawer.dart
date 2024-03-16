@@ -4,6 +4,7 @@ import 'package:taskswiper/model/task.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/ui/dialogs/add_task_list_dialog.dart';
+import 'package:taskswiper/ui/widgets/separator.dart';
 
 import '../../model/task_list.dart';
 import '../../service/service_locator.dart';
@@ -84,6 +85,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                 ),
               ),
             ),
+            SeparatorWithLabel(label: "Completed")
           ],
         );
       }),
