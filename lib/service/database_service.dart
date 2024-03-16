@@ -2,6 +2,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:taskswiper/model/task.dart';
 
+import '../model/status.dart';
 import '../model/task_list.dart';
 
 class DatabaseService {
@@ -25,7 +26,7 @@ class DatabaseService {
         );
         await database.execute(
           "CREATE TABLE task(id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-              "task TEXT NOT NULL, taskListId INTEGER NOT NULL, " +
+              "task TEXT NOT NULL, status TEXT NOT NULL, taskListId INTEGER NOT NULL, " +
               "FOREIGN KEY(taskListId) REFERENCES taskList(id))",
         );
 
@@ -36,11 +37,11 @@ class DatabaseService {
 
         // Create default items.
         await database.execute(
-          "INSERT INTO task (task, taskListId) VALUES ('Start using Task Swiper!\n\n " +
+          "INSERT INTO task (task, status, taskListId) VALUES ('Start using Task Swiper!\n\n" +
               "Create new lists from the menu on the right.\n\n"
-              "Swipe task up to complete\n\n" +
-              "Swipe task down to delete\n\n"
-            "', ?);", [id]
+              "+ Swipe task up to complete\n\n" +
+              "+ Swipe task down to delete\n\n"
+            "', ?, ?);", [Status.open, id]
         );
       },
       version: 1,

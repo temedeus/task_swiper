@@ -7,6 +7,7 @@ import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/service/service_locator.dart';
 import 'package:taskswiper/ui/widgets/task_item.dart';
 
+import '../../model/status.dart';
 import '../../model/task_list.dart';
 import '../dialogs/dismiss_task_dialog.dart';
 import '../dialogs/edit_task_dialog.dart';
@@ -96,7 +97,7 @@ class _TaskListingState extends State<TaskListing> {
           : CarouselSlider(
               options:
                   CarouselOptions(height: 400.0, enableInfiniteScroll: false),
-              items: _tasks.map((i) {
+              items: sortedTasks().where((task) => task.status == Status.open).map((i) {
                 return Builder(
                   builder: (BuildContext context) {
                     return buildDismissableTask(context, i);
@@ -115,6 +116,21 @@ class _TaskListingState extends State<TaskListing> {
         child: const Text('Add task'),
       )
     ];
+  }
+
+  List<Task> sortedTasks() {
+    List<Task> sorted = [ ..._tasks];
+    sorted.sort((a, b) {
+      if (a.status == Status.open && b.status != Status.open) {
+        return -1;
+      } else if (a.status != Status.open && b.status == Status.open) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+
+    return sorted;
   }
 
   Dismissible buildDismissableTask(BuildContext context, Task i) {
@@ -141,8 +157,8 @@ class _TaskListingState extends State<TaskListing> {
               return DismissTaskDialog(() {
                 deleteTask(i);
                 Navigator.pop(context);
-              }, "COMPLETE TASK", "Are you sure you wish to complete task?",
-                  "COMPLETE", "CANCEL");
+              }, "DELETE TASK", "Are you sure you wish to delete task?",
+                  "DELETE", "CANCEL");
             },
           )
         },
@@ -172,9 +188,9 @@ class _TaskListingState extends State<TaskListing> {
         if (_taskList != null) {
           var taskListId = _taskList.id;
           var id =
-              await _databaseService.createItem(Task(null, text, taskListId!));
+              await _databaseService.createItem(Task(null, text, Status.open, taskListId!));
           setState(() {
-            _tasks = [Task(id, text, taskListId), ..._tasks];
+            _tasks = [Task(id, text, Status.open, taskListId), ..._tasks];
           });
         }
       } else {
@@ -183,6 +199,7 @@ class _TaskListingState extends State<TaskListing> {
             return Task(
               existingTask.id,
               text,
+              existingTask.status,
               task.taskListId,
             );
           } else {
@@ -190,7 +207,7 @@ class _TaskListingState extends State<TaskListing> {
           }
         }).toList();
 
-        await _databaseService.updateTask(Task(task.id, text, task.taskListId));
+        await _databaseService.updateTask(Task(task.id, text, Status.open, task.taskListId));
         setState(() {
           _tasks = updatedTasks;
         });
