@@ -5,10 +5,10 @@ import 'package:taskswiper/model/task.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/service/service_locator.dart';
-import 'package:taskswiper/ui/dialogs/dismiss_task_dialog.dart';
 import 'package:taskswiper/ui/widgets/task_item.dart';
 
 import '../../model/task_list.dart';
+import '../dialogs/dismiss_task_dialog.dart';
 import '../dialogs/edit_task_dialog.dart';
 
 class TaskListing extends StatefulWidget {
@@ -126,10 +126,28 @@ class _TaskListingState extends State<TaskListing> {
         deleteTask(i);
         return true;
       },
-      child: TaskItem(i),
+      child: TaskItem(
+        i,
+        onEditPressed: () => {},
+        onDeletePressed: () async => {
+          await showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return DismissTaskDialog(
+                  () {
+                    deleteTask(i);
+                    Navigator.pop(context);
+                  },
+                  "COMPLETE TASK",
+                  "Are you sure you wish to complete task?",
+                  "COMPLETE",
+                  "CANCEL");
+            },
+          )
+        },
+      ),
     );
   }
-
 
   deleteTask(i) async {
     await _databaseService.deleteTask(i.id!);
@@ -146,15 +164,13 @@ class _TaskListingState extends State<TaskListing> {
     );
   }
 
-
-
   buildDialog() {
     callback(String text) async {
       final _taskList = this._taskList;
       if (_taskList != null) {
         var taskListId = _taskList.id;
-        var id = await _databaseService
-            .createItem(Task(null, text, taskListId!));
+        var id =
+            await _databaseService.createItem(Task(null, text, taskListId!));
         setState(() {
           _tasks = [Task(id, text, taskListId), ..._tasks];
         });
