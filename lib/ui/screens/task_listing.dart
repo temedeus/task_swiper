@@ -123,22 +123,8 @@ class _TaskListingState extends State<TaskListing> {
       direction: DismissDirection.vertical,
       onUpdate: (details) {},
       confirmDismiss: (DismissDirection direction) async {
-        return await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            if (direction == DismissDirection.up) {
-              return DismissTaskDialog(
-                  () => deleteTask(i),
-                  "COMPLETE TASK",
-                  "Are you sure you wish to complete task?",
-                  "COMPLETE",
-                  "CANCEL");
-            } else {
-              return DismissTaskDialog(() => deleteTask(i), "DELETE TASK",
-                  "Are you sure you wish to delete task?", "DELETE", "CANCEL");
-            }
-          },
-        );
+        deleteTask(i);
+        return true;
       },
       child: TaskItem(i),
     );
@@ -153,7 +139,6 @@ class _TaskListingState extends State<TaskListing> {
       newNotes.remove(i);
       _tasks = [...newNotes];
     });
-    Navigator.of(context).pop(true);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Task deleted'),

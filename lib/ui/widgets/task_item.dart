@@ -56,9 +56,9 @@ class TaskItem extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 10), // Adjust as needed
+          SizedBox(height: 10),
           SingleChildScrollView(
-            scrollDirection: Axis.horizontal, // Set the desired scrolling direction
+            scrollDirection: Axis.horizontal,
             child: Text(
               task.task,
               style: const TextStyle(
