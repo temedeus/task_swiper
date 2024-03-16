@@ -68,7 +68,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                     onPressed: () {
                       showDialog(
                           context: context,
-                          builder: (BuildContext) =>
+                          builder: (BuildContext context) =>
                               buildCreateTasklistDialog());
                     },
                     style: ElevatedButton.styleFrom(
@@ -100,19 +100,20 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
         });
       } else {
 
-        // Update the task list in _taskLists
+        late TaskList taskListToUpdate;
         var updatedTaskLists = _taskLists.map((existingTaskList) {
           if (existingTaskList.id == taskList.id) {
-            return TaskList(
+            taskListToUpdate = TaskList(
               existingTaskList.id,
               text,
             );
+            return taskListToUpdate;
           } else {
             return existingTaskList;
           }
         }).toList();
 
-        await _databaseService.updateTasklist(taskList);
+        await _databaseService.updateTasklist(taskListToUpdate);
         setState(() {
           _taskLists = updatedTaskLists;
         });
@@ -143,12 +144,12 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
             onPressed: () {
               showDialog(
                   context: context,
-                  builder: (BuildContext) =>
+                  builder: (BuildContext context) =>
                       buildCreateTasklistDialog(taskList: taskList));
             },
           ),
           IconButton(
-            icon: Icon(Icons.delete),
+            icon: const Icon(Icons.delete),
             onPressed: () {
               showDialog(
                   context: context,

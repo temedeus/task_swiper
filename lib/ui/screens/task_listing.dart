@@ -110,7 +110,7 @@ class _TaskListingState extends State<TaskListing> {
         ),
         onPressed: () => showDialog<String>(
           context: context,
-          builder: (BuildContext context) => buildDialog(),
+          builder: (BuildContext context) => buildDialog(context),
         ),
         child: const Text('Add task'),
       )
@@ -128,20 +128,21 @@ class _TaskListingState extends State<TaskListing> {
       },
       child: TaskItem(
         i,
-        onEditPressed: () => {},
+        onEditPressed: () async => {
+          await showDialog<String>(
+            context: context,
+            builder: (BuildContext context) => buildDialog(context, task: i),
+          ),
+        },
         onDeletePressed: () async => {
           await showDialog(
             context: context,
             builder: (BuildContext context) {
-              return DismissTaskDialog(
-                  () {
-                    deleteTask(i);
-                    Navigator.pop(context);
-                  },
-                  "COMPLETE TASK",
-                  "Are you sure you wish to complete task?",
-                  "COMPLETE",
-                  "CANCEL");
+              return DismissTaskDialog(() {
+                deleteTask(i);
+                Navigator.pop(context);
+              }, "COMPLETE TASK", "Are you sure you wish to complete task?",
+                  "COMPLETE", "CANCEL");
             },
           )
         },
@@ -164,15 +165,34 @@ class _TaskListingState extends State<TaskListing> {
     );
   }
 
-  buildDialog() {
+  buildDialog(context, {Task? task}) {
     callback(String text) async {
-      final _taskList = this._taskList;
-      if (_taskList != null) {
-        var taskListId = _taskList.id;
-        var id =
-            await _databaseService.createItem(Task(null, text, taskListId!));
+      if (task == null) {
+        final _taskList = this._taskList;
+        if (_taskList != null) {
+          var taskListId = _taskList.id;
+          var id =
+              await _databaseService.createItem(Task(null, text, taskListId!));
+          setState(() {
+            _tasks = [Task(id, text, taskListId), ..._tasks];
+          });
+        }
+      } else {
+        var updatedTasks = _tasks.map((existingTask) {
+          if (existingTask.id == task.id) {
+            return Task(
+              existingTask.id,
+              text,
+              task.taskListId,
+            );
+          } else {
+            return existingTask;
+          }
+        }).toList();
+
+        await _databaseService.updateTask(Task(task.id, text, task.taskListId));
         setState(() {
-          _tasks = [Task(id, text, taskListId), ..._tasks];
+          _tasks = updatedTasks;
         });
       }
 
@@ -181,6 +201,7 @@ class _TaskListingState extends State<TaskListing> {
 
     return EditTaskDialog(
       callback: callback,
+      defaultText: task?.task,
     );
   }
 }

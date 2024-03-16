@@ -52,6 +52,11 @@ class DatabaseService {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  Future<int> updateTask(Task task) async {
+    return _database.update('task', task.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace, where: "id = ?", whereArgs: [task.id!]);
+  }
+
   Future<int> createTasklist(TaskList taskList) async {
     return _database.insert('taskList', taskList.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
@@ -59,7 +64,7 @@ class DatabaseService {
 
   Future<int> updateTasklist(TaskList taskList) async {
     return _database.update('taskList', taskList.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+        conflictAlgorithm: ConflictAlgorithm.replace, where: "id = ?", whereArgs: [taskList.id!]);
   }
 
   Future<List<Task>> getTasks(int taskListId) async {
