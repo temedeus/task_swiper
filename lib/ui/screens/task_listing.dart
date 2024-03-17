@@ -9,7 +9,7 @@ import 'package:taskswiper/ui/widgets/task_item.dart';
 
 import '../../model/status.dart';
 import '../../model/task_list.dart';
-import '../dialogs/dismiss_task_dialog.dart';
+import '../dialogs/confirm_dialog.dart';
 import '../dialogs/edit_task_dialog.dart';
 
 class TaskListing extends StatefulWidget {
@@ -91,13 +91,17 @@ class _TaskListingState extends State<TaskListing> {
   }
 
   List<Widget> buildTaskSlider() {
-    return [
-      _tasks.isEmpty
-          ? const Center(child: Text("No tasks"))
+    bool allTasksCompleted = _tasks.every((task) => task.status == Status.closed);
+    String statusText = allTasksCompleted ? "All tasks completed!" : "No tasks";
+    return  [
+      _tasks.isEmpty || allTasksCompleted
+          ? Center(child: Text(statusText))
           : CarouselSlider(
               options:
                   CarouselOptions(height: 400.0, enableInfiniteScroll: false),
-              items: sortedTasks().where((task) => task.status == Status.open).map((i) {
+              items: sortedTasks()
+                  .where((task) => task.status == Status.open)
+                  .map((i) {
                 return Builder(
                   builder: (BuildContext context) {
                     return buildDismissableTask(context, i);
@@ -105,21 +109,25 @@ class _TaskListingState extends State<TaskListing> {
                 );
               }).toList(),
             ),
-      ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          textStyle: const TextStyle(fontSize: 20),
-        ),
-        onPressed: () => showDialog<String>(
-          context: context,
-          builder: (BuildContext context) => buildDialog(context),
-        ),
-        child: const Text('Add task'),
-      )
+      buildAddTaskButton()
     ];
   }
 
+  ElevatedButton buildAddTaskButton() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        textStyle: const TextStyle(fontSize: 20),
+      ),
+      onPressed: () => showDialog<String>(
+        context: context,
+        builder: (BuildContext context) => buildDialog(context),
+      ),
+      child: const Text('Add task'),
+    );
+  }
+
   List<Task> sortedTasks() {
-    List<Task> sorted = [ ..._tasks];
+    List<Task> sorted = [..._tasks];
     sorted.sort((a, b) {
       if (a.status == Status.open && b.status != Status.open) {
         return -1;
@@ -139,7 +147,7 @@ class _TaskListingState extends State<TaskListing> {
       direction: DismissDirection.vertical,
       onUpdate: (details) {},
       confirmDismiss: (DismissDirection direction) async {
-        deleteTask(i);
+        closeTask(i);
         return true;
       },
       child: TaskItem(
@@ -154,7 +162,7 @@ class _TaskListingState extends State<TaskListing> {
           await showDialog(
             context: context,
             builder: (BuildContext context) {
-              return DismissTaskDialog(() {
+              return ConfirmDialog(() {
                 deleteTask(i);
                 Navigator.pop(context);
               }, "DELETE TASK", "Are you sure you wish to delete task?",
@@ -162,6 +170,34 @@ class _TaskListingState extends State<TaskListing> {
             },
           )
         },
+      ),
+    );
+  }
+
+  closeTask(Task i) async {
+    late Task newTask;
+    var updatedTasks = _tasks.map((existingTask) {
+      if (existingTask.id == i.id) {
+        newTask = Task(
+          i.id,
+          i.task,
+          Status.closed,
+          i.taskListId,
+        );
+        return newTask;
+      } else {
+        return existingTask;
+      }
+    }).toList();
+
+    await _databaseService.updateTask(newTask);
+
+    setState(() {
+      _tasks = [...updatedTasks];
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Task completed!'),
       ),
     );
   }
@@ -187,8 +223,8 @@ class _TaskListingState extends State<TaskListing> {
         final _taskList = this._taskList;
         if (_taskList != null) {
           var taskListId = _taskList.id;
-          var id =
-              await _databaseService.createItem(Task(null, text, Status.open, taskListId!));
+          var id = await _databaseService
+              .createItem(Task(null, text, Status.open, taskListId!));
           setState(() {
             _tasks = [Task(id, text, Status.open, taskListId), ..._tasks];
           });
@@ -207,7 +243,8 @@ class _TaskListingState extends State<TaskListing> {
           }
         }).toList();
 
-        await _databaseService.updateTask(Task(task.id, text, Status.open, task.taskListId));
+        await _databaseService
+            .updateTask(Task(task.id, text, Status.open, task.taskListId));
         setState(() {
           _tasks = updatedTasks;
         });

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:taskswiper/model/task.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/ui/dialogs/add_task_list_dialog.dart';
@@ -8,7 +7,7 @@ import 'package:taskswiper/ui/widgets/separator.dart';
 
 import '../../model/task_list.dart';
 import '../../service/service_locator.dart';
-import '../dialogs/dismiss_task_dialog.dart';
+import '../dialogs/confirm_dialog.dart';
 
 class TaskListDrawer extends StatefulWidget {
   @override
@@ -85,7 +84,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                 ),
               ),
             ),
-            SeparatorWithLabel(label: "Completed")
+            const SeparatorWithLabel(label: "Completed")
           ],
         );
       }),
@@ -166,7 +165,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
 
   Widget buildDeleteTasklistConfirmationDialog(
       TaskList taskList, SelectedTaskListProvider selectedTaskListIdProvider) {
-    return DismissTaskDialog(() {
+    return ConfirmDialog(() {
       deleteTasklist(taskList, selectedTaskListIdProvider);
     }, "DELETE TASKLIST", "Are you sure you wish to delete task list?",
         "DELETE", "CANCEL");

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class DismissTaskDialog extends StatelessWidget {
+class ConfirmDialog extends StatelessWidget {
 
   final VoidCallback callback;
   final String title;
@@ -9,7 +9,7 @@ class DismissTaskDialog extends StatelessWidget {
   final String primary;
   final String cancel;
 
-  const DismissTaskDialog(this.callback, this.title, this.content, this.primary, this.cancel, {Key? key}) : super(key: key);
+  const ConfirmDialog(this.callback, this.title, this.content, this.primary, this.cancel, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
