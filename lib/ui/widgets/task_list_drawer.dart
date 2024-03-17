@@ -19,15 +19,22 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
   late DatabaseService _databaseService;
   List<TaskList> _taskLists = [];
 
+  Map<int, bool> _taskListCompleteness = Map();
+
   @override
   void initState() {
     super.initState();
     _databaseService = locator<DatabaseService>();
 
     _databaseService.getTaskLists().then((taskLists) {
-      setState(() {
-        _taskLists = List<TaskList>.from(taskLists);
-      });
+      _databaseService
+          .getTaskListCompleteness()
+          .then((taskListCompleteness) => {
+                setState(() {
+                  _taskLists = List<TaskList>.from(taskLists);
+                  _taskListCompleteness = taskListCompleteness;
+                })
+              });
     }).catchError((error) {});
   }
 
@@ -59,7 +66,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                 child: const Text('Task lists'),
               ),
             ),
-            ...createTaskListItems(selectedTaskListIdProvider),
+            ...createTaskListItems(false, selectedTaskListIdProvider),
             SizedBox(
               child: Align(
                 alignment: Alignment.centerLeft,
@@ -84,7 +91,8 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                 ),
               ),
             ),
-            const SeparatorWithLabel(label: "Completed")
+            const SeparatorWithLabel(label: "Completed"),
+            ...createTaskListItems(true, selectedTaskListIdProvider),
           ],
         );
       }),
@@ -100,7 +108,6 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
           _taskLists = [..._taskLists, TaskList(id, text)];
         });
       } else {
-
         late TaskList taskListToUpdate;
         var updatedTaskLists = _taskLists.map((existingTaskList) {
           if (existingTaskList.id == taskList.id) {
@@ -120,20 +127,30 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
         });
       }
       Navigator.pop(context);
+      Navigator.of(context);
     }
 
     return AddTaskListDialog(callback: callback, defaultText: taskList?.title);
   }
 
   Iterable<Widget> createTaskListItems(
-      SelectedTaskListProvider selectedTaskListProvider) {
-    return _taskLists.map((taskList) {
+      bool isComplete, SelectedTaskListProvider selectedTaskListProvider) {
+    var items = _taskLists.where((taskList) =>
+        (isComplete &&
+            (_taskLists.isEmpty ||
+                _taskListCompleteness.containsKey(taskList.id) &&
+                    _taskListCompleteness[taskList.id]!)) ||
+        !isComplete &&
+            _taskListCompleteness.containsKey(taskList.id) &&
+            !_taskListCompleteness[taskList.id]!);
+    return items.map((taskList) {
       return Row(
         children: [
           Expanded(
             child: ListTile(
               title: Text(taskList.title),
-              selected: taskList.id == selectedTaskListProvider.selectedTasklist?.id,
+              selected:
+                  taskList.id == selectedTaskListProvider.selectedTasklist?.id,
               onTap: () {
                 selectedTaskListProvider.setSelectedTaskListId(taskList);
                 Navigator.pop(context);

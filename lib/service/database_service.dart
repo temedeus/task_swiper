@@ -37,12 +37,12 @@ class DatabaseService {
 
         // Create default items.
         await database.execute(
-          "INSERT INTO task (task, status, taskListId) VALUES ('Start using Task Swiper!\n\n" +
-              "Create new lists from the menu on the right.\n\n"
-              "+ Swipe task up to complete\n\n" +
-              "+ Swipe task down to delete\n\n"
-            "', ?, ?);", [Status.open, id]
-        );
+            "INSERT INTO task (task, status, taskListId) VALUES ('Start using Task Swiper!\n\n" +
+                "Create new lists from the menu on the right.\n\n"
+                    "+ Swipe task up to complete\n\n" +
+                "+ Swipe task down to delete\n\n"
+                    "', ?, ?);",
+            [Status.open, id]);
       },
       version: 1,
     );
@@ -55,7 +55,9 @@ class DatabaseService {
 
   Future<int> updateTask(Task task) async {
     return _database.update('task', task.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace, where: "id = ?", whereArgs: [task.id!]);
+        conflictAlgorithm: ConflictAlgorithm.replace,
+        where: "id = ?",
+        whereArgs: [task.id!]);
   }
 
   Future<int> createTasklist(TaskList taskList) async {
@@ -65,7 +67,9 @@ class DatabaseService {
 
   Future<int> updateTasklist(TaskList taskList) async {
     return _database.update('taskList', taskList.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace, where: "id = ?", whereArgs: [taskList.id!]);
+        conflictAlgorithm: ConflictAlgorithm.replace,
+        where: "id = ?",
+        whereArgs: [taskList.id!]);
   }
 
   Future<List<Task>> getTasks(int taskListId) async {
@@ -87,12 +91,39 @@ class DatabaseService {
     return queryResult.map((e) => TaskList.fromMap(e)).toList();
   }
 
+  Future<Map<int, bool>> getTaskListCompleteness() async {
+    Map<int, bool> completenessMap = {};
+
+    try {
+      final List<Map<String, dynamic>> results = await _database.rawQuery('''
+      SELECT tl.id, 
+             CASE 
+               WHEN COUNT(t.id) = 0 THEN 0 
+               ELSE MIN(CASE WHEN t.status = '${Status.open}' THEN 0 ELSE 1 END) 
+             END AS completeness
+      FROM taskList tl
+      LEFT JOIN task t ON tl.id = t.taskListId
+      GROUP BY tl.id
+    ''');
+
+      for (final result in results) {
+        completenessMap[result['id'] as int] = (result['completeness'] == 1);
+      }
+    } catch (e) {
+      // Handle error
+      print('Error retrieving task list completeness: $e');
+    }
+
+    return completenessMap;
+  }
+
   Future<void> deleteTask(int id) async {
     await _database.delete("task", where: "id = ?", whereArgs: [id]);
   }
 
   Future<void> deleteTasksByTaskList(int taskListId) async {
-    await _database.delete("task", where: "taskListId = ?", whereArgs: [taskListId]);
+    await _database
+        .delete("task", where: "taskListId = ?", whereArgs: [taskListId]);
   }
 
   Future<void> deleteTasklist(int id) async {

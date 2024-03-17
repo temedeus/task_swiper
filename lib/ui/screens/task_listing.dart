@@ -91,7 +91,7 @@ class _TaskListingState extends State<TaskListing> {
   }
 
   List<Widget> buildTaskSlider() {
-    bool allTasksCompleted = _tasks.every((task) => task.status == Status.closed);
+    bool allTasksCompleted = _tasks.isNotEmpty &&_tasks.every((task) => task.status == Status.closed);
     String statusText = allTasksCompleted ? "All tasks completed!" : "No tasks";
     return  [
       _tasks.isEmpty || allTasksCompleted
