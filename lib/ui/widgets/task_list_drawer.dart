@@ -161,34 +161,25 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
               },
             ),
           ),
-          ...createButtons(!isClosed, taskList, selectedTaskListProvider)
+          ActionableIconButton(
+            Icons.edit,
+            () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) =>
+                      buildEditTasklistDialog(taskList: taskList));
+            },
+            disabled: isClosed,
+          ),
+          ActionableIconButton(
+              Icons.delete,
+              () => showDialog(
+                  context: context,
+                  builder: (context) => buildDeleteTasklistConfirmationDialog(
+                      taskList, selectedTaskListProvider)))
         ],
       );
     });
-  }
-
-  List<Widget> createButtons(editable, taskList, selectedTaskListProvider) {
-    List<Widget> buttons = [];
-    if (editable) {
-      buttons.add(ActionableIconButton(
-        Icons.edit,
-        () {
-          showDialog(
-              context: context,
-              builder: (BuildContext context) =>
-                  buildEditTasklistDialog(taskList: taskList));
-        },
-      ));
-    }
-
-    buttons.add(ActionableIconButton(
-        Icons.delete,
-        () => showDialog(
-            context: context,
-            builder: (context) => buildDeleteTasklistConfirmationDialog(
-                taskList, selectedTaskListProvider))));
-
-    return buttons;
   }
 
   Widget buildDeleteTasklistConfirmationDialog(

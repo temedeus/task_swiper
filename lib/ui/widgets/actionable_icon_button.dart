@@ -13,6 +13,7 @@ class ActionableIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       icon: Icon(iconData),
+      color: disabled ? Colors.white70 : Colors.black,
       onPressed: disabled ? null : onPressed,
     );
   }

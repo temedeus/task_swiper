@@ -93,19 +93,19 @@ class _TaskListingState extends State<TaskListing> {
   List<Widget> buildTaskSlider() {
     bool allTasksCompleted = _tasks.isNotEmpty &&
         _tasks.every((task) => task.status == Status.closed);
-    String statusText = allTasksCompleted ? "All tasks completed!" : "No tasks";
+    Iterable<Task> tasksToShow = allTasksCompleted
+        ? sortedTasks()
+        : sortedTasks().where((task) => task.status == Status.open);
     return [
-      _tasks.isEmpty || allTasksCompleted
-          ? Center(child: Text(statusText))
+      _tasks.isEmpty
+          ? Center(child: Text("No tasks"))
           : CarouselSlider(
               options:
                   CarouselOptions(height: 400.0, enableInfiniteScroll: false),
-              items: sortedTasks()
-                  .where((task) => task.status == Status.open)
-                  .map((i) {
+              items: tasksToShow.map((i) {
                 return Builder(
                   builder: (BuildContext context) {
-                    return buildDismissableTask(context, i);
+                    return buildDismissableTaskItem(context, i);
                   },
                 );
               }).toList(),
@@ -142,18 +142,21 @@ class _TaskListingState extends State<TaskListing> {
     return sorted;
   }
 
-  Dismissible buildDismissableTask(BuildContext context, Task i) {
+  Dismissible buildDismissableTaskItem(BuildContext context, Task i) {
     return Dismissible(
       key: UniqueKey(),
       direction: DismissDirection.vertical,
       onUpdate: (details) {},
       confirmDismiss: (DismissDirection direction) async {
-        closeTask(i);
-        return true;
+        if (i.status == Status.open) {
+          closeTask(i);
+          return true;
+        } else {
+          return false;
+        }
       },
       child: TaskItem(
         i,
-        false,
         onEditPressed: () async => {
           await showDialog<String>(
             context: context,

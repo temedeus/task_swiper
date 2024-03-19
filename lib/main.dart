@@ -58,7 +58,11 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: AppBar(
           title: Text(widget.title),
         ),
-        body: this.isReady ? TaskListing() : Center(child: Text("Starting up..."),),
+        body: isReady
+            ? TaskListing()
+            : Center(
+                child: Text("Starting up..."),
+              ),
         drawer: TaskListDrawer());
   }
 }
