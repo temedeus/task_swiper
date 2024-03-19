@@ -19,20 +19,40 @@ class TaskItem extends StatelessWidget {
       margin: const EdgeInsets.all(15.0),
       padding: const EdgeInsets.all(15.0),
       decoration: buildBoxDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          buildButtonRow(),
-          const SizedBox(height: 10),
-          Text(
-            task.task,
-            style: TextStyle(
-              fontSize: 16.0,
-              color: task.status == Status.closed
-                  ? Colors.grey
-                  : Colors.black87,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildButtonRow(),
+              const SizedBox(height: 10),
+              Text(
+                task.task,
+                style: TextStyle(
+                  fontSize: 16.0,
+                  color: task.status == Status.closed
+                      ? Colors.grey
+                      : Colors.black87,
+                ),
+              )
+            ],
+          ),
+          if (task.status == Status.closed)
+            Positioned.fill(
+              child: FittedBox(
+                fit: BoxFit.none,
+                child: Transform.rotate(
+                  angle: -45 * 3.1415926535 / 180,
+                  child: Text(
+                    "COMPLETED",
+                    style: TextStyle(
+                      color: Colors.grey.withOpacity(0.5),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          )
         ],
       ),
     );
@@ -64,23 +84,23 @@ class TaskItem extends StatelessWidget {
 
   Row buildButtonRow() {
     return Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                ActionableIconButton(
-                  Icons.edit,
-                  onEditPressed!,
-                  disabled: task.status == Status.closed,
-                ),
-                ActionableIconButton(
-                  Icons.delete,
-                  onDeletePressed!,
-                  disabled: task.status == Status.closed,
-                ),
-              ],
+            ActionableIconButton(
+              Icons.edit,
+              onEditPressed!,
+              disabled: task.status == Status.closed,
+            ),
+            ActionableIconButton(
+              Icons.delete,
+              onDeletePressed!,
+              disabled: task.status == Status.closed,
             ),
           ],
-        );
+        ),
+      ],
+    );
   }
 }
