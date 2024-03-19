@@ -1,13 +1,16 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:taskswiper/model/task.dart';
+import 'package:taskswiper/ui/widgets/actionable_icon_button.dart';
 
 class TaskItem extends StatelessWidget {
   final Task task;
+  final bool completed;
   final VoidCallback? onEditPressed;
   final VoidCallback? onDeletePressed;
 
-  const TaskItem(this.task, {Key? key, this.onEditPressed, this.onDeletePressed}) : super(key: key);
+  const TaskItem(this.task, this.completed,
+      {Key? key, this.onEditPressed, this.onDeletePressed})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -44,14 +47,8 @@ class TaskItem extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: onEditPressed,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: onDeletePressed,
-                  ),
+                  ActionableIconButton(Icons.edit, onEditPressed!),
+                  ActionableIconButton(Icons.delete, onDeletePressed!),
                 ],
               ),
             ],

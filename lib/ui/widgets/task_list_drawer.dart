@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/ui/dialogs/add_task_list_dialog.dart';
+import 'package:taskswiper/ui/widgets/actionable_icon_button.dart';
 import 'package:taskswiper/ui/widgets/separator.dart';
 
 import '../../model/task_list.dart';
@@ -145,7 +146,6 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
 
   Iterable<Widget> createTaskListItems(
       bool isClosed, SelectedTaskListProvider selectedTaskListProvider) {
-
     var items = isClosed ? _closedTasklists : _openTasklists;
     return items.map((taskList) {
       return Row(
@@ -161,27 +161,34 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
               },
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (BuildContext context) =>
-                      buildEditTasklistDialog(taskList: taskList));
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (context) => buildDeleteTasklistConfirmationDialog(
-                      taskList, selectedTaskListProvider));
-            },
-          ),
+          ...createButtons(!isClosed, taskList, selectedTaskListProvider)
         ],
       );
     });
+  }
+
+  List<Widget> createButtons(editable, taskList, selectedTaskListProvider) {
+    List<Widget> buttons = [];
+    if (editable) {
+      buttons.add(ActionableIconButton(
+        Icons.edit,
+        () {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) =>
+                  buildEditTasklistDialog(taskList: taskList));
+        },
+      ));
+    }
+
+    buttons.add(ActionableIconButton(
+        Icons.delete,
+        () => showDialog(
+            context: context,
+            builder: (context) => buildDeleteTasklistConfirmationDialog(
+                taskList, selectedTaskListProvider))));
+
+    return buttons;
   }
 
   Widget buildDeleteTasklistConfirmationDialog(

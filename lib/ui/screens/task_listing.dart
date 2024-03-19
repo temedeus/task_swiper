@@ -91,9 +91,10 @@ class _TaskListingState extends State<TaskListing> {
   }
 
   List<Widget> buildTaskSlider() {
-    bool allTasksCompleted = _tasks.isNotEmpty &&_tasks.every((task) => task.status == Status.closed);
+    bool allTasksCompleted = _tasks.isNotEmpty &&
+        _tasks.every((task) => task.status == Status.closed);
     String statusText = allTasksCompleted ? "All tasks completed!" : "No tasks";
-    return  [
+    return [
       _tasks.isEmpty || allTasksCompleted
           ? Center(child: Text(statusText))
           : CarouselSlider(
@@ -152,6 +153,7 @@ class _TaskListingState extends State<TaskListing> {
       },
       child: TaskItem(
         i,
+        false,
         onEditPressed: () async => {
           await showDialog<String>(
             context: context,
