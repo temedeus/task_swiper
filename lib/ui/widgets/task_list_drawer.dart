@@ -17,9 +17,8 @@ class TaskListDrawer extends StatefulWidget {
 class _TaskListDrawerState extends State<TaskListDrawer> {
   // TODO: refactor database handling up one level from here.
   late DatabaseService _databaseService;
-  List<TaskList> _taskLists = [];
-
-  Map<int, bool> _taskListCompleteness = Map();
+  List<TaskList> _openTasklists = [];
+  List<TaskList> _closedTasklists = [];
 
   @override
   void initState() {
@@ -27,14 +26,25 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
     _databaseService = locator<DatabaseService>();
 
     _databaseService.getTaskLists().then((taskLists) {
-      _databaseService
-          .getTaskListCompleteness()
-          .then((taskListCompleteness) => {
-                setState(() {
-                  _taskLists = List<TaskList>.from(taskLists);
-                  _taskListCompleteness = taskListCompleteness;
-                })
-              });
+      _databaseService.getTaskListCompleteness().then((taskListCompleteness) {
+        Map<int, bool> _taskListCompleteness = taskListCompleteness;
+
+        List<TaskList> openTasklists = [];
+        List<TaskList> closedTasklists = [];
+
+        for (var taskList in taskLists) {
+          if (_taskListCompleteness[taskList.id] == false) {
+            openTasklists.add(taskList);
+          } else {
+            closedTasklists.add(taskList);
+          }
+        }
+
+        setState(() {
+          _openTasklists = List<TaskList>.from(openTasklists);
+          _closedTasklists = List<TaskList>.from(closedTasklists);
+        });
+      });
     }).catchError((error) {});
   }
 
@@ -76,7 +86,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                       showDialog(
                           context: context,
                           builder: (BuildContext context) =>
-                              buildCreateTasklistDialog());
+                              buildEditTasklistDialog());
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -99,17 +109,17 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
     );
   }
 
-  buildCreateTasklistDialog({TaskList? taskList}) {
+  buildEditTasklistDialog({TaskList? taskList}) {
     callback(String text) async {
       if (taskList == null) {
         // Create a new task list
         var id = await _databaseService.createTasklist(TaskList(null, text));
         setState(() {
-          _taskLists = [..._taskLists, TaskList(id, text)];
+          _openTasklists = [..._openTasklists, TaskList(id, text)];
         });
       } else {
         late TaskList taskListToUpdate;
-        var updatedTaskLists = _taskLists.map((existingTaskList) {
+        var updatedTaskLists = _openTasklists.map((existingTaskList) {
           if (existingTaskList.id == taskList.id) {
             taskListToUpdate = TaskList(
               existingTaskList.id,
@@ -123,7 +133,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
 
         await _databaseService.updateTasklist(taskListToUpdate);
         setState(() {
-          _taskLists = updatedTaskLists;
+          _openTasklists = updatedTaskLists;
         });
       }
       Navigator.pop(context);
@@ -134,15 +144,9 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
   }
 
   Iterable<Widget> createTaskListItems(
-      bool isComplete, SelectedTaskListProvider selectedTaskListProvider) {
-    var items = _taskLists.where((taskList) =>
-        (isComplete &&
-            (_taskLists.isEmpty ||
-                _taskListCompleteness.containsKey(taskList.id) &&
-                    _taskListCompleteness[taskList.id]!)) ||
-        !isComplete &&
-            _taskListCompleteness.containsKey(taskList.id) &&
-            !_taskListCompleteness[taskList.id]!);
+      bool isClosed, SelectedTaskListProvider selectedTaskListProvider) {
+
+    var items = isClosed ? _closedTasklists : _openTasklists;
     return items.map((taskList) {
       return Row(
         children: [
@@ -163,7 +167,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
               showDialog(
                   context: context,
                   builder: (BuildContext context) =>
-                      buildCreateTasklistDialog(taskList: taskList));
+                      buildEditTasklistDialog(taskList: taskList));
             },
           ),
           IconButton(
@@ -198,11 +202,15 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
     await _databaseService.deleteTasklist(id!);
     selectedTaskListProvider.deselectSelectedTaskList();
 
-    List<TaskList> newTaskLists = List.from(_taskLists);
-    newTaskLists.remove(taskList);
+    List<TaskList> updatedOpenTaskLists = List.from(_openTasklists);
+    List<TaskList> updatedClosedTaskLists = List.from(_closedTasklists);
+
+    updatedOpenTaskLists.remove(taskList);
+    updatedClosedTaskLists.remove(taskList);
 
     setState(() {
-      _taskLists = newTaskLists;
+      _openTasklists = updatedOpenTaskLists;
+      _closedTasklists = updatedClosedTaskLists;
     });
 
     Navigator.of(context).pop(true);
