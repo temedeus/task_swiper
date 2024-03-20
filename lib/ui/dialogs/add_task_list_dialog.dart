@@ -33,9 +33,9 @@ class _AddTaskListDialogState extends State<AddTaskListDialog> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextField(
-              keyboardType: TextInputType.multiline,
               minLines: 1,
               maxLines: 1,
+              maxLength: 20,
               controller: myController,
               decoration: const InputDecoration(
                   hintText: "Add task list",
