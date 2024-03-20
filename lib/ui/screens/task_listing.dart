@@ -5,6 +5,7 @@ import 'package:taskswiper/model/task.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/service/service_locator.dart';
+import 'package:taskswiper/ui/widgets/switch_wrapper.dart';
 import 'package:taskswiper/ui/widgets/task_item.dart';
 
 import '../../model/status.dart';
@@ -24,6 +25,7 @@ class _TaskListingState extends State<TaskListing> {
   late DatabaseService _databaseService;
   List<Task> _tasks = [];
   TaskList? _taskList;
+  bool showCompleted = false;
 
   _TaskListingState();
 
@@ -66,8 +68,9 @@ class _TaskListingState extends State<TaskListing> {
 
               return Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  SwitchWrapper(title: "Show completed", onChanged: null,),
                   Expanded(
                     child: Center(
                       child: Column(
