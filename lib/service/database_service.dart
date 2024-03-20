@@ -39,8 +39,7 @@ class DatabaseService {
         await database.execute(
             "INSERT INTO task (task, status, taskListId) VALUES ('Start using Task Swiper!\n\n" +
                 "Create new lists from the menu on the right.\n\n"
-                    "+ Swipe task up to complete\n\n" +
-                "+ Swipe task down to delete\n\n"
+                    "+ Swipe task up or down to complete\n\n"
                     "', ?, ?);",
             [Status.open, id]);
       },

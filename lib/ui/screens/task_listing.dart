@@ -92,7 +92,7 @@ class _TaskListingState extends State<TaskListing> {
 
   List<Widget> buildTaskSlider() {
     bool allTasksCompleted = _tasks.isNotEmpty &&
-        _tasks.every((task) => task.status == Status.closed);
+        _tasks.every((task) => task.status == Status.completed);
     Iterable<Task> tasksToShow = allTasksCompleted
         ? sortedTasks()
         : sortedTasks().where((task) => task.status == Status.open);
@@ -186,7 +186,7 @@ class _TaskListingState extends State<TaskListing> {
         newTask = Task(
           i.id,
           i.task,
-          Status.closed,
+          Status.completed,
           i.taskListId,
         );
         return newTask;

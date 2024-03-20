@@ -30,14 +30,14 @@ class TaskItem extends StatelessWidget {
                 task.task,
                 style: TextStyle(
                   fontSize: 16.0,
-                  color: task.status == Status.closed
+                  color: task.status == Status.completed
                       ? Colors.grey
                       : Colors.black87,
                 ),
               )
             ],
           ),
-          if (task.status == Status.closed)
+          if (task.status == Status.completed)
             Positioned.fill(
               child: FittedBox(
                 fit: BoxFit.none,
@@ -91,12 +91,12 @@ class TaskItem extends StatelessWidget {
             ActionableIconButton(
               Icons.edit,
               onEditPressed!,
-              disabled: task.status == Status.closed,
+              disabled: task.status == Status.completed,
             ),
             ActionableIconButton(
               Icons.delete,
               onDeletePressed!,
-              disabled: task.status == Status.closed,
+              disabled: task.status == Status.completed,
             ),
           ],
         ),
