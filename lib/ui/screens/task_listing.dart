@@ -5,7 +5,6 @@ import 'package:taskswiper/model/task.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/service/service_locator.dart';
-import 'package:taskswiper/ui/widgets/switch_wrapper.dart';
 import 'package:taskswiper/ui/widgets/task_item.dart';
 
 import '../../model/status.dart';
