@@ -25,7 +25,7 @@ class _TaskListingState extends State<TaskListing> {
   late DatabaseService _databaseService;
   List<Task> _tasks = [];
   TaskList? _taskList;
-  bool showCompleted = false;
+  bool _showCompleted = false;
 
   _TaskListingState();
 
@@ -57,6 +57,7 @@ class _TaskListingState extends State<TaskListing> {
 
         return FutureBuilder<List<Task>>(
           future: _databaseService.getTasks(taskListId!),
+          key: ValueKey(_showCompleted),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return loadingIndicator();
@@ -66,17 +67,20 @@ class _TaskListingState extends State<TaskListing> {
               _tasks = snapshot.data ?? [];
               _taskList = selectedTaskListProvider.selectedTasklist;
 
+              bool allTasksCompleted = _tasks.isNotEmpty &&
+                  _tasks.every((task) => task.status == Status.completed);
+
               return Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  SwitchWrapper(title: "Show completed", onChanged: null,),
+                  buildSwitchWrapper("Show completed", allTasksCompleted),
                   Expanded(
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
-                        children: buildTaskSlider(),
+                        children: buildTaskSlider(allTasksCompleted),
                       ),
                     ),
                   ),
@@ -93,10 +97,8 @@ class _TaskListingState extends State<TaskListing> {
     return const Center(child: CircularProgressIndicator());
   }
 
-  List<Widget> buildTaskSlider() {
-    bool allTasksCompleted = _tasks.isNotEmpty &&
-        _tasks.every((task) => task.status == Status.completed);
-    Iterable<Task> tasksToShow = allTasksCompleted
+  List<Widget> buildTaskSlider(allTasksCompleted) {
+    Iterable<Task> tasksToShow = allTasksCompleted || _showCompleted
         ? sortedTasks()
         : sortedTasks().where((task) => task.status == Status.open);
     return [
@@ -115,6 +117,31 @@ class _TaskListingState extends State<TaskListing> {
             ),
       buildAddTaskButton()
     ];
+  }
+
+  Widget buildSwitchWrapper(String title, bool disabled) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          Switch(
+            value: _showCompleted,
+            onChanged: disabled
+                ? null
+                : (value) {
+                    setState(() {
+                      _showCompleted = value;
+                    });
+                  },
+          ),
+        ],
+      ),
+    );
   }
 
   ElevatedButton buildAddTaskButton() {
