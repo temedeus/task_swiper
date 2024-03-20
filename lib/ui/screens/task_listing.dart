@@ -64,7 +64,6 @@ class _TaskListingState extends State<TaskListing> {
               return const Center(child: Text("Something went wrong :("));
             } else {
               _tasks = snapshot.data ?? [];
-              _taskList = selectedTaskListProvider.selectedTasklist;
 
               bool allTasksCompleted = _tasks.isNotEmpty &&
                   _tasks.every((task) => task.status == Status.completed);

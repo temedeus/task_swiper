@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class EditTaskDialog extends StatefulWidget {
   const EditTaskDialog({Key? key, required this.callback, this.defaultText}) : super(key: key);
@@ -35,8 +36,18 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
           children: <Widget>[
             TextField(
               keyboardType: TextInputType.multiline,
-              minLines: 5,
               maxLines: 5,
+              maxLength: 100,
+              inputFormatters: [
+                TextInputFormatter.withFunction((oldValue, newValue) {
+                  int newLines = newValue.text.split('\n').length;
+                  if (newLines > 5) {
+                    return oldValue;
+                  } else {
+                    return newValue;
+                  }
+                }),
+              ],
               controller: myController,
               decoration: const InputDecoration(
                   hintText: "Write your note here",
