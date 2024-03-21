@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class EditTaskDialog extends StatefulWidget {
-  const EditTaskDialog({Key? key, required this.callback, this.defaultText}) : super(key: key);
+  const EditTaskDialog({Key? key, required this.callback, this.defaultText})
+      : super(key: key);
   final Function(String) callback;
   final String? defaultText;
 
   @override
-  State<EditTaskDialog> createState() => _EditTaskDialogState(callback, defaultText);
+  State<EditTaskDialog> createState() =>
+      _EditTaskDialogState(callback, defaultText);
 }
 
 class _EditTaskDialogState extends State<EditTaskDialog> {
@@ -20,7 +22,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
 
   @override
   void initState() {
-    if(defaultText != null) {
+    if (defaultText != null) {
       myController.text = defaultText!;
     }
   }
@@ -49,14 +51,17 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                 }),
               ],
               controller: myController,
-              decoration: const InputDecoration(
-                  hintText: "Write your note here",
-                  labelText: "Note",
-                  border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                hintText: "Write your note here",
+                labelText: "Note",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+              ),
             ),
             TextButton(
               onPressed: () {
-                if(myController.text.isNotEmpty) {
+                if (myController.text.isNotEmpty) {
                   callback(myController.text);
                 }
               },
@@ -64,7 +69,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             ),
             TextButton(
               onPressed: () {
-               Navigator.pop(context);
+                Navigator.pop(context);
               },
               child: const Text('Close'),
             ),

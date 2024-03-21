@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 class AddTaskListDialog extends StatefulWidget {
-  const AddTaskListDialog({Key? key, required this.callback, this.defaultText}) : super(key: key);
+  const AddTaskListDialog({Key? key, required this.callback, this.defaultText})
+      : super(key: key);
   final Function(String) callback;
   final String? defaultText;
+
   @override
-  State<AddTaskListDialog> createState() => _AddTaskListDialogState(callback, defaultText);
+  State<AddTaskListDialog> createState() =>
+      _AddTaskListDialogState(callback, defaultText);
 }
 
 class _AddTaskListDialogState extends State<AddTaskListDialog> {
@@ -13,13 +16,20 @@ class _AddTaskListDialogState extends State<AddTaskListDialog> {
 
   Function(String) callback;
   final String? defaultText;
+  late final String hintText;
+  late final String labelText;
 
   _AddTaskListDialogState(this.callback, this.defaultText);
 
   @override
   void initState() {
-    if(defaultText != null) {
+    if (defaultText != null) {
       myController.text = defaultText!;
+      hintText = "Edit task list";
+      labelText = "Edit";
+    } else {
+      hintText = "Add task list";
+      labelText = "Add";
     }
   }
 
@@ -35,16 +45,20 @@ class _AddTaskListDialogState extends State<AddTaskListDialog> {
             TextField(
               minLines: 1,
               maxLines: 1,
-              maxLength: 20,
+              maxLength: 35,
               controller: myController,
-              decoration: const InputDecoration(
-                  hintText: "Add task list",
-                  labelText: "Add",
-                  border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                hintText: hintText,
+                labelText: labelText,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(
+                      15.0),
+                ),
+              ),
             ),
             TextButton(
               onPressed: () {
-                if(myController.text.isNotEmpty) {
+                if (myController.text.isNotEmpty) {
                   callback(myController.text);
                 }
               },
@@ -52,7 +66,7 @@ class _AddTaskListDialogState extends State<AddTaskListDialog> {
             ),
             TextButton(
               onPressed: () {
-               Navigator.pop(context);
+                Navigator.pop(context);
               },
               child: const Text('Cancel'),
             ),
