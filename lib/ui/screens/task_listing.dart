@@ -25,7 +25,7 @@ class _TaskListingState extends State<TaskListing> {
   List<Task> _tasks = [];
   TaskList? _taskList;
   bool _showCompleted = false;
-
+  bool _initialSetup = true;
   _TaskListingState();
 
   @override
@@ -44,9 +44,15 @@ class _TaskListingState extends State<TaskListing> {
     return Consumer<SelectedTaskListProvider>(
       builder: (context, selectedTaskListProvider, _) {
         final selectedTasklist = selectedTaskListProvider.selectedTasklist;
-        _taskList = (selectedTasklist == null || selectedTasklist.id == null)
+        _taskList = (selectedTasklist == null || selectedTasklist.id == null) && _initialSetup
             ? _taskList
             : selectedTasklist;
+
+        if(_initialSetup) {
+          setState(() {
+            _initialSetup = false;
+          });
+        }
 
         if (_taskList == null || _taskList?.id == null) {
           return const Center(
