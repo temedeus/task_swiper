@@ -26,6 +26,7 @@ class _TaskListingState extends State<TaskListing> {
   TaskList? _taskList;
   bool _showCompleted = false;
   bool _initialSetup = true;
+
   _TaskListingState();
 
   @override
@@ -44,11 +45,12 @@ class _TaskListingState extends State<TaskListing> {
     return Consumer<SelectedTaskListProvider>(
       builder: (context, selectedTaskListProvider, _) {
         final selectedTasklist = selectedTaskListProvider.selectedTasklist;
-        _taskList = (selectedTasklist == null || selectedTasklist.id == null) && _initialSetup
+        _taskList = (selectedTasklist == null || selectedTasklist.id == null) &&
+                _initialSetup
             ? _taskList
             : selectedTasklist;
 
-        if(_initialSetup) {
+        if (_initialSetup) {
           setState(() {
             _initialSetup = false;
           });
@@ -197,6 +199,7 @@ class _TaskListingState extends State<TaskListing> {
             builder: (BuildContext context) => buildDialog(context, task: i),
           ),
         },
+        onUncompletePressed: reopenTaskCallback(i),
         onDeletePressed: () async => {
           await showDialog(
             context: context,
@@ -292,9 +295,38 @@ class _TaskListingState extends State<TaskListing> {
       Navigator.pop(context);
     }
 
+
     return EditTaskDialog(
       callback: callback,
       defaultText: task?.task,
     );
+  }
+
+
+  reopenTaskCallback(Task task) {
+    callback() async {
+      late Task _task;
+      var updatedTasks = _tasks.map((existingTask) {
+        if (existingTask.id == task.id) {
+          _task = Task(
+            existingTask.id,
+            existingTask.task,
+            Status.open,
+            existingTask.taskListId,
+          );
+          return _task;
+        } else {
+          return existingTask;
+        }
+      }).toList();
+
+      print("Reopinenign");
+      await _databaseService.updateTask(_task);
+      setState(() {
+        _tasks = updatedTasks;
+      });
+    }
+
+    return callback;
   }
 }

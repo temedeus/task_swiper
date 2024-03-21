@@ -7,9 +7,10 @@ class TaskItem extends StatelessWidget {
   final Task task;
   final VoidCallback? onEditPressed;
   final VoidCallback? onDeletePressed;
+  final VoidCallback? onUncompletePressed;
 
   const TaskItem(this.task,
-      {Key? key, this.onEditPressed, this.onDeletePressed})
+      {Key? key, this.onEditPressed, this.onDeletePressed, this.onUncompletePressed})
       : super(key: key);
 
   @override
@@ -34,10 +35,22 @@ class TaskItem extends StatelessWidget {
                       ? Colors.grey
                       : Colors.black87,
                 ),
-              )
+              ),
             ],
           ),
           if (task.status == Status.completed)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: TextButton(
+                  onPressed:  onUncompletePressed,
+                  child: const Text('Uncomplete'),
+                ),
+              ),
+            ),
+           if (task.status == Status.completed)
             Positioned.fill(
               child: FittedBox(
                 fit: BoxFit.none,
@@ -85,6 +98,29 @@ class TaskItem extends StatelessWidget {
   Row buildButtonRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
+          children: [
+            ActionableIconButton(
+              Icons.edit,
+              onEditPressed!,
+              disabled: task.status == Status.completed,
+            ),
+            ActionableIconButton(
+              Icons.delete,
+              onDeletePressed!,
+              disabled: task.status == Status.completed,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Row buildUncompleteButton() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Row(
           children: [
