@@ -7,10 +7,10 @@ class TaskItem extends StatelessWidget {
   final Task task;
   final VoidCallback? onEditPressed;
   final VoidCallback? onDeletePressed;
-  final VoidCallback? onUncompletePressed;
+  final VoidCallback? onReopenTaskPressed;
 
   const TaskItem(this.task,
-      {Key? key, this.onEditPressed, this.onDeletePressed, this.onUncompletePressed})
+      {Key? key, this.onEditPressed, this.onDeletePressed, this.onReopenTaskPressed})
       : super(key: key);
 
   @override
@@ -39,36 +39,44 @@ class TaskItem extends StatelessWidget {
             ],
           ),
           if (task.status == Status.completed)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: TextButton(
-                  onPressed:  onUncompletePressed,
-                  child: const Text('Uncomplete'),
-                ),
+            buildReopenTaskButton(),
+           if (task.status == Status.completed)
+            buildCompletedWatermark(),
+        ],
+      ),
+    );
+  }
+
+  Positioned buildReopenTaskButton() {
+    return Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: TextButton(
+                onPressed:  onReopenTaskPressed,
+                child: const Text('Reopen task'),
               ),
             ),
-           if (task.status == Status.completed)
-            Positioned.fill(
-              child: FittedBox(
-                fit: BoxFit.none,
-                child: Transform.rotate(
-                  angle: -45 * 3.1415926535 / 180,
-                  child: Text(
-                    "COMPLETED",
-                    style: TextStyle(
-                      color: Colors.grey.withOpacity(0.5),
-                      fontWeight: FontWeight.bold,
-                    ),
+          );
+  }
+
+  Positioned buildCompletedWatermark() {
+    return Positioned.fill(
+            child: FittedBox(
+              fit: BoxFit.none,
+              child: Transform.rotate(
+                angle: -45 * 3.1415926535 / 180,
+                child: Text(
+                  "COMPLETED",
+                  style: TextStyle(
+                    color: Colors.grey.withOpacity(0.5),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-        ],
-      ),
-    );
+          );
   }
 
   BoxDecoration buildBoxDecoration() {

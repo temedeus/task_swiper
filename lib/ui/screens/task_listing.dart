@@ -51,9 +51,7 @@ class _TaskListingState extends State<TaskListing> {
             : selectedTasklist;
 
         if (_initialSetup) {
-          setState(() {
-            _initialSetup = false;
-          });
+          _initialSetup = false;
         }
 
         if (_taskList == null || _taskList?.id == null) {
@@ -199,7 +197,7 @@ class _TaskListingState extends State<TaskListing> {
             builder: (BuildContext context) => buildDialog(context, task: i),
           ),
         },
-        onUncompletePressed: reopenTaskCallback(i),
+        onReopenTaskPressed: reopenTaskCallback(i),
         onDeletePressed: () async => {
           await showDialog(
             context: context,
@@ -295,13 +293,11 @@ class _TaskListingState extends State<TaskListing> {
       Navigator.pop(context);
     }
 
-
     return EditTaskDialog(
       callback: callback,
       defaultText: task?.task,
     );
   }
-
 
   reopenTaskCallback(Task task) {
     callback() async {
