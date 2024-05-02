@@ -29,6 +29,7 @@ dependencies:
   path: ^1.8.0
   provider: ^5.0.0
   get_it: ^7.6.7
+  url_launcher: ^6.2.6
 
 
   cupertino_icons: ^1.0.2

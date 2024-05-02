@@ -5,6 +5,7 @@ import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/ui/dialogs/add_task_list_dialog.dart';
 import 'package:taskswiper/ui/widgets/actionable_icon_button.dart';
 import 'package:taskswiper/ui/widgets/separator.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../model/task_list.dart';
 import '../../service/service_locator.dart';
@@ -113,24 +114,13 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                     onPressed: () {
                       showDialog(
                           context: context,
-                          builder: (BuildContext context) => AboutDialog(
-                                children: [
-                                  Image.asset('assets/logo.png'),
-                                ],
-                              ));
+                          builder: (BuildContext context) =>
+                              buildAboutDialog());
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     ),
-                    child: const Row(
-                      children: [
-                        Text("About"),
-                        Padding(
-                          padding: EdgeInsets.only(left: 8.0),
-                          child: Icon(Icons.info_outline),
-                        ),
-                      ],
-                    ),
+                    child: buildAboutButton(),
                   ),
                 ),
               ),
@@ -138,6 +128,74 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
           ],
         );
       }),
+    );
+  }
+
+  Row buildAboutButton() {
+    return const Row(
+      children: [
+        Text("About"),
+        Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: Icon(Icons.info_outline),
+        ),
+      ],
+    );
+  }
+
+  AboutDialog buildAboutDialog() {
+    return AboutDialog(
+      applicationIcon: SizedBox(
+          width: 24, height: 24, child: Image.asset('assets/logo.png')),
+      children: [
+        buildText(),
+        const SeparatorWithLabel(label: "Source code:"),
+        const Text("Created by: Teemu Puurunen"),
+        InkWell(
+          onTap: () =>
+              launchUrl(Uri.parse('https://github.com/temedeus/task_swiper')),
+          child: const Text(
+            'https://github.com/temedeus/task_swiper',
+            style: TextStyle(
+                decoration: TextDecoration.underline, color: Colors.blue),
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget buildText() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'About',
+                style: TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 12.0),
+              Text(
+                  "App designed for simplistic task management. Manage tasks and task lists maintained on" +
+                      " your local device."),
+              SizedBox(height: 12.0),
+              Text("Please be cautious when entering sensitive or personal information in this app. " +
+                  "Remember that mobile devices can be easily lost or stolen. To safeguard your privacy," +
+                  " avoid saving details such as passwords, financial information, or any sensitive personal" +
+                  " data within this app.")
+            ],
+          ),
+        ),
+      ],
     );
   }
 
