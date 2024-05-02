@@ -104,6 +104,37 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
             ),
             const SeparatorWithLabel(label: "Completed"),
             ...createTaskListItems(true, selectedTaskListIdProvider),
+            const SeparatorWithLabel(label: "General"),
+            SizedBox(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: IntrinsicWidth(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) => AboutDialog(
+                                children: [
+                                  Image.asset('assets/logo.png'),
+                                ],
+                              ));
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    ),
+                    child: const Row(
+                      children: [
+                        Text("About"),
+                        Padding(
+                          padding: EdgeInsets.only(left: 8.0),
+                          child: Icon(Icons.info_outline),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         );
       }),
