@@ -151,17 +151,21 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
         buildText(),
         const SeparatorWithLabel(label: "Source code:"),
         const Text("Created by: Teemu Puurunen"),
-        InkWell(
-          onTap: () =>
-              launchUrl(Uri.parse('https://github.com/temedeus/task_swiper')),
-          child: const Text(
-            'https://github.com/temedeus/task_swiper',
-            style: TextStyle(
-                decoration: TextDecoration.underline, color: Colors.blue),
-          ),
-        )
+        buildGithubLink()
       ],
     );
+  }
+
+  InkWell buildGithubLink() {
+    return InkWell(
+        onTap: () =>
+            launchUrl(Uri.parse('https://github.com/temedeus/task_swiper')),
+        child: const Text(
+          'https://github.com/temedeus/task_swiper',
+          style: TextStyle(
+              decoration: TextDecoration.underline, color: Colors.blue),
+        ),
+      );
   }
 
   Widget buildText() {
@@ -188,10 +192,12 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                   "App designed for simplistic task management. Manage tasks and task lists maintained on" +
                       " your local device."),
               SizedBox(height: 12.0),
-              Text("Please be cautious when entering sensitive or personal information in this app. " +
-                  "Remember that mobile devices can be easily lost or stolen. To safeguard your privacy," +
+              Text("Remember that mobile devices can be easily lost or stolen. To safeguard your privacy," +
                   " avoid saving details such as passwords, financial information, or any sensitive personal" +
-                  " data within this app.")
+                  " data within this app."),
+              SizedBox(height: 12.0),
+              Text("Task Swiper logo was created with the assistance of DALL·E 2")
+
             ],
           ),
         ),
