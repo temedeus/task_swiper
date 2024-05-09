@@ -43,7 +43,12 @@ class DatabaseService {
                     "', ?, ?);",
             [Status.open, id]);
       },
-      version: 1,
+      onUpgrade: (database, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await database.execute('ALTER TABLE task ADD COLUMN recurrence_type TEXT');
+        }
+      },
+      version: 2,
     );
   }
 
