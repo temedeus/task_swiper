@@ -1,4 +1,4 @@
-package com.example.taskswiper
+package com.temedeus.taskswiper
 
 import io.flutter.embedding.android.FlutterActivity
 
