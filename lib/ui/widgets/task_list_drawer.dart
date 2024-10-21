@@ -5,7 +5,6 @@ import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/ui/dialogs/add_task_list_dialog.dart';
 import 'package:taskswiper/ui/widgets/actionable_icon_button.dart';
 import 'package:taskswiper/ui/widgets/separator.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../model/task_list.dart';
 import '../../service/service_locator.dart';
@@ -156,17 +155,20 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
     );
   }
 
+
   InkWell buildGithubLink() {
     return InkWell(
-        onTap: () =>
-            launchUrl(Uri.parse('https://github.com/temedeus/task_swiper')),
-        child: const Text(
-          'https://github.com/temedeus/task_swiper',
-          style: TextStyle(
-              decoration: TextDecoration.underline, color: Colors.blue),
-        ),
-      );
+      onTap: () =>
+          {},
+      child: const Text(
+        'https://github.com/temedeus/task_swiper',
+        style: TextStyle(
+            decoration: TextDecoration.underline, color: Colors.blue),
+      ),
+    );
   }
+
+
 
   Widget buildText() {
     return Column(
