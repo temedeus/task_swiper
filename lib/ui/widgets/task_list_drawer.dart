@@ -161,7 +161,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
       onTap: () =>
           {},
       child: const Text(
-        'https://github.com/temedeus/task_swiper',
+        'https://github.com/temedeus/taskswiper',
         style: TextStyle(
             decoration: TextDecoration.underline, color: Colors.blue),
       ),
