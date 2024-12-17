@@ -30,7 +30,7 @@ class TaskItem extends StatelessWidget {
               Text(
                 task.task,
                 style: TextStyle(
-                  fontSize: 16.0,
+                  fontSize: calculateFontSize(task.task.length),
                   color: task.status == Status.completed
                       ? Colors.grey
                       : Colors.black87,
@@ -45,6 +45,18 @@ class TaskItem extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  double calculateFontSize(int textLength) {
+    if (textLength <= 10) {
+      return 50.0; // Very short text
+    } else if (textLength <= 20) {
+      return 40.0; // Short text
+    } else if (textLength <= 40) {
+      return 30.0; // Medium text
+    } else {
+      return 16.0; // Long text
+    }
   }
 
   Positioned buildReopenTaskButton() {
