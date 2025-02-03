@@ -22,6 +22,11 @@ class TaskItem extends StatelessWidget {
       decoration: buildBoxDecoration(),
       child: Stack(
         children: [
+          Positioned.fill(
+            child: CustomPaint(
+              painter: InclinedLinesPainter(),
+            ),
+          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -38,10 +43,8 @@ class TaskItem extends StatelessWidget {
               ),
             ],
           ),
-          if (task.status == Status.completed)
-            buildReopenTaskButton(),
-           if (task.status == Status.completed)
-            buildCompletedWatermark(),
+          if (task.status == Status.completed) buildReopenTaskButton(),
+          if (task.status == Status.completed) buildCompletedWatermark(),
         ],
       ),
     );
@@ -61,34 +64,34 @@ class TaskItem extends StatelessWidget {
 
   Positioned buildReopenTaskButton() {
     return Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: TextButton(
-                onPressed:  onReopenTaskPressed,
-                child: const Text('Reopen task'),
-              ),
-            ),
-          );
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: TextButton(
+          onPressed: onReopenTaskPressed,
+          child: const Text('Reopen task'),
+        ),
+      ),
+    );
   }
 
   Positioned buildCompletedWatermark() {
     return Positioned.fill(
-            child: FittedBox(
-              fit: BoxFit.none,
-              child: Transform.rotate(
-                angle: -45 * 3.1415926535 / 180,
-                child: Text(
-                  "COMPLETED",
-                  style: TextStyle(
-                    color: Colors.grey.withOpacity(0.5),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+      child: FittedBox(
+        fit: BoxFit.none,
+        child: Transform.rotate(
+          angle: -45 * 3.1415926535 / 180,
+          child: Text(
+            "COMPLETED",
+            style: TextStyle(
+              color: Colors.grey.withOpacity(0.5),
+              fontWeight: FontWeight.bold,
             ),
-          );
+          ),
+        ),
+      ),
+    );
   }
 
   BoxDecoration buildBoxDecoration() {
@@ -136,27 +139,34 @@ class TaskItem extends StatelessWidget {
       ],
     );
   }
+}
 
-  Row buildUncompleteButton() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Row(
-          children: [
-            ActionableIconButton(
-              Icons.edit,
-              onEditPressed!,
-              disabled: task.status == Status.completed,
-            ),
-            ActionableIconButton(
-              Icons.delete,
-              onDeletePressed!,
-              disabled: task.status == Status.completed,
-            ),
-          ],
-        ),
-      ],
-    );
+class InclinedLinesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    final int lineCount = 10;
+    final double spacing = 20.0;
+
+    for (int i = 0; i < lineCount; i++) {
+      final double offset = i * spacing;
+      final double fadeFactor = 1.0 - (i / lineCount);
+
+      paint.color = Colors.grey.withOpacity(0.2 * fadeFactor);
+
+      canvas.drawLine(
+        Offset(size.width - offset, size.height), // Bottom-right moving left
+        Offset(size.width, size.height - offset), // Bottom-right moving up
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
   }
 }
