@@ -9,7 +9,7 @@ import 'database_callbacks.dart';
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
 
-  static final int version = 2;
+  static final int version = 3;
   factory DatabaseService() {
     return _instance;
   }
