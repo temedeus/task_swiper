@@ -28,21 +28,22 @@ Future<void> onCreateCallback(Database database, int version) async {
 }
 
 Future<void> onUpgradeCallback(Database database, int oldVersion, int newVersion) async {
+  print("blaa");
   if (oldVersion < 3) {
+    print("running this");
     // Add recurrence_id column to link tasks to recurrence rules
-    await database.execute('ALTER TABLE task ADD COLUMN recurrence_id INTEGER');
+    await database.execute('ALTER TABLE task ADD COLUMN recurrenceId INTEGER');
 
-    // Create recurrence_rules table
+    // Create recurrence_rules.dart table
     await database.execute('''
-      CREATE TABLE recurrence_rules (
+      CREATE TABLE recurrenceRules (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         frequency TEXT CHECK (frequency IN ('daily', 'weekly', 'monthly', 'custom')),
         interval INTEGER DEFAULT 1,
-        days_of_week TEXT,  -- Comma-separated values (e.g., 'mon,wed')
-        start_date DATETIME NOT NULL,
-        end_date DATETIME,
-        max_occurrences INTEGER,
-        time_of_day TIME
+        daysOfWeek TEXT,  -- Comma-separated values (e.g., 'mon,wed')
+        endDate DATETIME,
+        maxOccurrences INTEGER,
+        timeOfDay TIME
       )
     ''');
   }

@@ -6,7 +6,6 @@ import 'package:taskswiper/ui/dialogs/add_task_list_dialog.dart';
 import 'package:taskswiper/ui/widgets/about_app_dialog.dart';
 import 'package:taskswiper/ui/widgets/actionable_icon_button.dart';
 import 'package:taskswiper/ui/widgets/separator.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../model/task_list.dart';
 import '../../service/service_locator.dart';

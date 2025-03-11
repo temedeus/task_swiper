@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:taskswiper/model/recurrence_rules.dart';
 import 'package:taskswiper/model/task.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
@@ -9,7 +10,6 @@ import 'package:taskswiper/ui/widgets/task_item.dart';
 
 import '../../model/status.dart';
 import '../../model/task_list.dart';
-import '../dialogs/confirm_dialog.dart';
 import '../dialogs/edit_task_dialog.dart';
 
 class TaskListing extends StatefulWidget {
@@ -20,7 +20,6 @@ class TaskListing extends StatefulWidget {
 }
 
 class _TaskListingState extends State<TaskListing> {
-  // TODO: refactor database handling up one level from here.
   late DatabaseService _databaseService;
   List<Task> _tasks = [];
   TaskList? _taskList;
@@ -46,7 +45,7 @@ class _TaskListingState extends State<TaskListing> {
       builder: (context, selectedTaskListProvider, _) {
         final selectedTasklist = selectedTaskListProvider.selectedTasklist;
         _taskList = (selectedTasklist == null || selectedTasklist.id == null) &&
-                _initialSetup
+            _initialSetup
             ? _taskList
             : selectedTasklist;
 
@@ -109,16 +108,16 @@ class _TaskListingState extends State<TaskListing> {
       _tasks.isEmpty
           ? Center(child: Text("No tasks"))
           : CarouselSlider(
-              options:
-                  CarouselOptions(height: 400.0, enableInfiniteScroll: false),
-              items: tasksToShow.map((i) {
-                return Builder(
-                  builder: (BuildContext context) {
-                    return buildDismissableTaskItem(context, i);
-                  },
-                );
-              }).toList(),
-            ),
+        options:
+        CarouselOptions(height: 400.0, enableInfiniteScroll: false),
+        items: tasksToShow.map((i) {
+          return Builder(
+            builder: (BuildContext context) {
+              return buildDismissableTaskItem(context, i);
+            },
+          );
+        }).toList(),
+      ),
       buildAddTaskButton()
     ];
   }
@@ -138,10 +137,10 @@ class _TaskListingState extends State<TaskListing> {
             onChanged: disabled
                 ? null
                 : (value) {
-                    setState(() {
-                      _showCompleted = value;
-                    });
-                  },
+              setState(() {
+                _showCompleted = value;
+              });
+            },
           ),
         ],
       ),
@@ -149,6 +148,7 @@ class _TaskListingState extends State<TaskListing> {
   }
 
   ElevatedButton buildAddTaskButton() {
+    print("buildAddTaskButton");
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         textStyle: const TextStyle(fontSize: 20),
@@ -176,18 +176,103 @@ class _TaskListingState extends State<TaskListing> {
     return sorted;
   }
 
+  buildDialog(context, {Task? task}) {
+    Future<RecurrenceRules?> getRecurrenceFuture() async {
+      if (task?.recurrenceId != null) {
+        return await _databaseService.getRecurrenceRule(task!.recurrenceId!);
+      }
+      return null;
+    }
+
+    // Callback function to handle task creation or update
+    callback(String text, RecurrenceRules? recurrence) async {
+      final _taskList = this._taskList;
+      if (_taskList != null) {
+        int? recurrenceId;
+        if (recurrence != null) {
+          recurrenceId = await _databaseService.saveRecurrenceRule(recurrence);
+        }
+
+        if (task == null) {
+          // Create new task
+          var taskListId = _taskList.id;
+          var id = await _databaseService.createItem(
+            Task(null, text, Status.open, taskListId!, recurrenceId: recurrenceId),
+          );
+          setState(() {
+            _tasks = [
+              Task(id, text, Status.open, taskListId, recurrenceId: recurrenceId),
+              ..._tasks
+            ];
+          });
+        } else {
+          // Update existing task
+          var updatedTasks = _tasks.map((existingTask) {
+            if (existingTask.id == task.id) {
+              return Task(
+                existingTask.id,
+                text,
+                existingTask.status,
+                task.taskListId,
+                recurrenceId: recurrenceId ?? existingTask.recurrenceId,
+              );
+            } else {
+              return existingTask;
+            }
+          }).toList();
+
+          await _databaseService.updateTask(Task(
+            task.id,
+            text,
+            task.status,
+            task.taskListId,
+            recurrenceId: recurrenceId ?? task.recurrenceId,
+          ));
+
+          setState(() {
+            _tasks = updatedTasks;
+          });
+        }
+
+        Navigator.pop(context);
+      }
+    }
+
+    return FutureBuilder<RecurrenceRules?>(
+      future: getRecurrenceFuture(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (snapshot.hasData) {
+          return EditTaskDialog(
+            callback: callback,
+            defaultText: task?.task,
+            defaultRecurrence: snapshot.data,
+          );
+        } else {
+          return EditTaskDialog(
+            callback: callback,
+            defaultText: task?.task,
+            defaultRecurrence: null,
+          );
+        }
+      },
+    );
+  }
+
+
   Dismissible buildDismissableTaskItem(BuildContext context, Task i) {
     return Dismissible(
       key: UniqueKey(),
       direction: DismissDirection.vertical,
-      onUpdate: (details) {},
       confirmDismiss: (DismissDirection direction) async {
         if (i.status == Status.open) {
           closeTask(i);
           return true;
-        } else {
-          return false;
         }
+        return false;
       },
       child: TaskItem(
         i,
@@ -197,21 +282,40 @@ class _TaskListingState extends State<TaskListing> {
             builder: (BuildContext context) => buildDialog(context, task: i),
           ),
         },
-        onReopenTaskPressed: reopenTaskCallback(i),
         onDeletePressed: () async => {
-          await showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return ConfirmDialog(() {
-                deleteTask(i);
-                Navigator.pop(context);
-              }, "DELETE TASK", "Are you sure you wish to delete task?",
-                  "DELETE", "CANCEL");
-            },
-          )
+          await _databaseService.deleteTask(i.id!),
+          setState(() {
+            _tasks.remove(i);
+          }),
         },
       ),
     );
+  }
+
+  reopenTaskCallback(Task task) {
+    callback() async {
+      late Task _task;
+      var updatedTasks = _tasks.map((existingTask) {
+        if (existingTask.id == task.id) {
+          _task = Task(
+            existingTask.id,
+            existingTask.task,
+            Status.open,
+            existingTask.taskListId,
+          );
+          return _task;
+        } else {
+          return existingTask;
+        }
+      }).toList();
+
+      await _databaseService.updateTask(_task);
+      setState(() {
+        _tasks = updatedTasks;
+      });
+    }
+
+    return callback;
   }
 
   closeTask(Task i) async {
@@ -255,74 +359,5 @@ class _TaskListingState extends State<TaskListing> {
         content: Text('Task deleted'),
       ),
     );
-  }
-
-  buildDialog(context, {Task? task}) {
-    callback(String text) async {
-      if (task == null) {
-        final _taskList = this._taskList;
-        if (_taskList != null) {
-          var taskListId = _taskList.id;
-          var id = await _databaseService
-              .createItem(Task(null, text, Status.open, taskListId!));
-          setState(() {
-            _tasks = [Task(id, text, Status.open, taskListId), ..._tasks];
-          });
-        }
-      } else {
-        var updatedTasks = _tasks.map((existingTask) {
-          if (existingTask.id == task.id) {
-            return Task(
-              existingTask.id,
-              text,
-              existingTask.status,
-              task.taskListId,
-            );
-          } else {
-            return existingTask;
-          }
-        }).toList();
-
-        await _databaseService
-            .updateTask(Task(task.id, text, Status.open, task.taskListId));
-        setState(() {
-          _tasks = updatedTasks;
-        });
-      }
-
-      Navigator.pop(context);
-    }
-
-    return EditTaskDialog(
-      callback: callback,
-      defaultText: task?.task,
-    );
-  }
-
-  reopenTaskCallback(Task task) {
-    callback() async {
-      late Task _task;
-      var updatedTasks = _tasks.map((existingTask) {
-        if (existingTask.id == task.id) {
-          _task = Task(
-            existingTask.id,
-            existingTask.task,
-            Status.open,
-            existingTask.taskListId,
-          );
-          return _task;
-        } else {
-          return existingTask;
-        }
-      }).toList();
-
-      print("Reopinenign");
-      await _databaseService.updateTask(_task);
-      setState(() {
-        _tasks = updatedTasks;
-      });
-    }
-
-    return callback;
   }
 }

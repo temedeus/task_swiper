@@ -1,30 +1,29 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:taskswiper/model/task.dart';
-
 import '../model/status.dart';
 import '../model/task_list.dart';
+import '../model/recurrence_rules.dart';
 import 'database_callbacks.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
-
   static final int version = 3;
+
   factory DatabaseService() {
     return _instance;
   }
 
   late final Database database;
-
   DatabaseService._internal();
 
   Future<void> initializeDB() async {
     String path = await getDatabasesPath();
     database = await openDatabase(
       join(path, 'task_database.db'),
-      onCreate: (db, version) => onCreateCallback(db, version), // Use onCreateCallback
+      onCreate: (db, version) => onCreateCallback(db, version),
       onUpgrade: (db, oldVersion, newVersion) =>
-          onUpgradeCallback(db, oldVersion, newVersion), // Use onUpgradeCallback
+          onUpgradeCallback(db, oldVersion, newVersion),
       version: version,
     );
   }
@@ -61,14 +60,13 @@ class DatabaseService {
 
   Future<TaskList> getDefaultTaskList() async {
     final List<Map<String, Object?>> queryResult =
-        await database.query('taskList');
-    // TODO: default user settings
+    await database.query('taskList');
     return TaskList.fromMap(queryResult.first);
   }
 
   Future<List<TaskList>> getTaskLists() async {
     final List<Map<String, Object?>> queryResult =
-        await database.query('taskList');
+    await database.query('taskList');
     return queryResult.map((e) => TaskList.fromMap(e)).toList();
   }
 
@@ -85,13 +83,12 @@ class DatabaseService {
       FROM taskList tl
       LEFT JOIN task t ON tl.id = t.taskListId
       GROUP BY tl.id
-    ''');
+      ''');
 
       for (final result in results) {
         completenessMap[result['id'] as int] = (result['completeness'] == 1);
       }
     } catch (e) {
-      // Handle error
       print('Error retrieving task list completeness: $e');
     }
 
@@ -103,11 +100,24 @@ class DatabaseService {
   }
 
   Future<void> deleteTasksByTaskList(int taskListId) async {
-    await database
-        .delete("task", where: "taskListId = ?", whereArgs: [taskListId]);
+    await database.delete("task", where: "taskListId = ?", whereArgs: [taskListId]);
   }
 
   Future<void> deleteTasklist(int id) async {
     await database.delete("taskList", where: "id = ?", whereArgs: [id]);
+  }
+
+  Future<int> saveRecurrenceRule(RecurrenceRules recurrence) async {
+    return await database.insert('recurrenceRules', recurrence.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<RecurrenceRules?> getRecurrenceRule(int recurrenceId) async {
+    final List<Map<String, Object?>> queryResult = await database
+        .query('recurrenceRules', where: "id = ?", whereArgs: [recurrenceId]);
+    if (queryResult.isNotEmpty) {
+      return RecurrenceRules.fromMap(queryResult.first);
+    }
+    return null;
   }
 }

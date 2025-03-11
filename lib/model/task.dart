@@ -17,7 +17,7 @@ class Task {
         task = item["task"],
         status = item["status"],
         taskListId = item["taskListId"],
-        recurrenceId = item["recurrence_id"];
+        recurrenceId = item["recurrenceId"];
 
   Map<String, dynamic> toMap() {
     return {
@@ -25,7 +25,7 @@ class Task {
       'task': task,
       'status': status,
       'taskListId': taskListId,
-      'recurrence_id': recurrenceId,
+      'recurrenceId': recurrenceId,
     };
   }
 }

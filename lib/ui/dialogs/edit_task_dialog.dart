@@ -1,29 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../../model/recurrence_rules.dart';
+import 'recurrence_selector.dart'; // Import recurrence selector
 
 class EditTaskDialog extends StatefulWidget {
-  const EditTaskDialog({Key? key, required this.callback, this.defaultText})
+  const EditTaskDialog({Key? key, required this.callback, this.defaultText, this.defaultRecurrence})
       : super(key: key);
-  final Function(String) callback;
+
+  final Future<Null> Function(String, RecurrenceRules?) callback;
   final String? defaultText;
+  final RecurrenceRules? defaultRecurrence;
 
   @override
-  State<EditTaskDialog> createState() =>
-      _EditTaskDialogState(callback, defaultText);
+  State<EditTaskDialog> createState() => _EditTaskDialogState();
 }
 
 class _EditTaskDialogState extends State<EditTaskDialog> {
-  final myController = TextEditingController();
-
-  Function(String) callback;
-  final String? defaultText;
-
-  _EditTaskDialogState(this.callback, this.defaultText);
+  final TextEditingController myController = TextEditingController();
+  RecurrenceRules? recurrenceData;
+  bool isRecurring = false;
 
   @override
   void initState() {
-    if (defaultText != null) {
-      myController.text = defaultText!;
+    super.initState();
+    if (widget.defaultText != null) {
+      myController.text = widget.defaultText!;
+    }
+
+    // Initialize recurrence settings
+    if (widget.defaultRecurrence != null) {
+      recurrenceData = widget.defaultRecurrence;
+      isRecurring = true;
     }
   }
 
@@ -40,16 +46,6 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
               keyboardType: TextInputType.multiline,
               maxLines: 5,
               maxLength: 100,
-              inputFormatters: [
-                TextInputFormatter.withFunction((oldValue, newValue) {
-                  int newLines = newValue.text.split('\n').length;
-                  if (newLines > 5) {
-                    return oldValue;
-                  } else {
-                    return newValue;
-                  }
-                }),
-              ],
               controller: myController,
               decoration: InputDecoration(
                 hintText: "Write your note here",
@@ -59,10 +55,37 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
                 ),
               ),
             ),
+            const SizedBox(height: 10),
+
+            // Toggle recurrence option
+            SwitchListTile(
+              title: const Text("Repeat Task"),
+              value: isRecurring,
+              onChanged: (value) {
+                setState(() {
+                  isRecurring = value;
+                  if (!isRecurring) recurrenceData = null; // Reset when turned off
+                });
+              },
+            ),
+
+            // Show RecurrenceSelector only if recurrence is enabled
+            if (isRecurring)
+              RecurrenceSelector(
+                initialRecurrence: recurrenceData,
+                onRecurrenceChanged: (recurrence) {
+                  setState(() {
+                    recurrenceData = recurrence;
+                  });
+                },
+              ),
+
+            const SizedBox(height: 10),
             TextButton(
               onPressed: () {
                 if (myController.text.isNotEmpty) {
-                  callback(myController.text);
+                  widget.callback(myController.text, recurrenceData);
+                  Navigator.pop(context);
                 }
               },
               child: const Text('Save'),
