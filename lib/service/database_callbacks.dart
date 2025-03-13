@@ -25,12 +25,12 @@ Future<void> onCreateCallback(Database database, int version) async {
         "', ?, ?);",
     [Status.open, id],
   );
+
+  onUpgradeCallback(database, 0, version);
 }
 
 Future<void> onUpgradeCallback(Database database, int oldVersion, int newVersion) async {
-  print("blaa");
-  if (oldVersion < 3) {
-    print("running this");
+  if (oldVersion < 2) {
     // Add recurrence_id column to link tasks to recurrence rules
     await database.execute('ALTER TABLE task ADD COLUMN recurrenceId INTEGER');
 

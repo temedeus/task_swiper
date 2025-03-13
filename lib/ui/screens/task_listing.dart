@@ -148,7 +148,6 @@ class _TaskListingState extends State<TaskListing> {
   }
 
   ElevatedButton buildAddTaskButton() {
-    print("buildAddTaskButton");
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         textStyle: const TextStyle(fontSize: 20),
@@ -234,7 +233,7 @@ class _TaskListingState extends State<TaskListing> {
           });
         }
 
-        Navigator.pop(context);
+        //Navigator.pop(context);
       }
     }
 
