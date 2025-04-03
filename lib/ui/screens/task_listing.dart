@@ -45,7 +45,7 @@ class _TaskListingState extends State<TaskListing> {
       builder: (context, selectedTaskListProvider, _) {
         final selectedTasklist = selectedTaskListProvider.selectedTasklist;
         _taskList = (selectedTasklist == null || selectedTasklist.id == null) &&
-            _initialSetup
+                _initialSetup
             ? _taskList
             : selectedTasklist;
 
@@ -108,16 +108,16 @@ class _TaskListingState extends State<TaskListing> {
       _tasks.isEmpty
           ? Center(child: Text("No tasks"))
           : CarouselSlider(
-        options:
-        CarouselOptions(height: 400.0, enableInfiniteScroll: false),
-        items: tasksToShow.map((i) {
-          return Builder(
-            builder: (BuildContext context) {
-              return buildDismissableTaskItem(context, i);
-            },
-          );
-        }).toList(),
-      ),
+              options:
+                  CarouselOptions(height: 400.0, enableInfiniteScroll: false),
+              items: tasksToShow.map((i) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return buildDismissableTaskItem(context, i);
+                  },
+                );
+              }).toList(),
+            ),
       buildAddTaskButton()
     ];
   }
@@ -137,10 +137,10 @@ class _TaskListingState extends State<TaskListing> {
             onChanged: disabled
                 ? null
                 : (value) {
-              setState(() {
-                _showCompleted = value;
-              });
-            },
+                    setState(() {
+                      _showCompleted = value;
+                    });
+                  },
           ),
         ],
       ),
@@ -167,9 +167,9 @@ class _TaskListingState extends State<TaskListing> {
         return -1;
       } else if (a.status != Status.open && b.status == Status.open) {
         return 1;
-      } else {
-        return 0;
       }
+
+      return 0;
     });
 
     return sorted;
@@ -196,11 +196,13 @@ class _TaskListingState extends State<TaskListing> {
           // Create new task
           var taskListId = _taskList.id;
           var id = await _databaseService.createItem(
-            Task(null, text, Status.open, taskListId!, recurrenceId: recurrenceId),
+            Task(null, text, Status.open, taskListId!,
+                recurrenceId: recurrenceId),
           );
           setState(() {
             _tasks = [
-              Task(id, text, Status.open, taskListId, recurrenceId: recurrenceId),
+              Task(id, text, Status.open, taskListId,
+                  recurrenceId: recurrenceId),
               ..._tasks
             ];
           });
@@ -260,7 +262,6 @@ class _TaskListingState extends State<TaskListing> {
       },
     );
   }
-
 
   Dismissible buildDismissableTaskItem(BuildContext context, Task i) {
     return Dismissible(

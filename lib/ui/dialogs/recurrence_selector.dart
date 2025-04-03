@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:taskswiper/model/day_of_week.dart';
+import 'package:taskswiper/model/recurrence_frequency.dart';
 import 'package:taskswiper/model/recurrence_rules.dart';
 
 class RecurrenceSelector extends StatefulWidget {
@@ -13,12 +15,10 @@ class RecurrenceSelector extends StatefulWidget {
 }
 
 class _RecurrenceSelectorState extends State<RecurrenceSelector> {
-  String? frequency;
+  RecurrenceFrequency? frequency;
   int interval = 1;
-  List<String> selectedDays = [];
+  List<DayOfWeek> selectedDays = [];
   TimeOfDay? selectedTime;
-
-  final List<String> weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   @override
   void initState() {
@@ -59,37 +59,37 @@ class _RecurrenceSelectorState extends State<RecurrenceSelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DropdownButtonFormField<String>(
+        DropdownButtonFormField<RecurrenceFrequency>(
           value: frequency,
           hint: const Text("Repeat Task"),
-          items: ['Daily', 'Weekly', 'Monthly', 'Custom'].map((String value) {
-            return DropdownMenuItem<String>(
-              value: value.toLowerCase(),
-              child: Text(value),
+          items: RecurrenceFrequency.values.map((RecurrenceFrequency value) {
+            return DropdownMenuItem<RecurrenceFrequency>(
+              value: value,
+              child: Text(capitalizeFirstLetter(value.name)),
             );
           }).toList(),
           onChanged: (value) {
             setState(() {
               frequency = value;
-              if (value != 'weekly') selectedDays.clear();
+              if (value != RecurrenceFrequency.weekly) selectedDays.clear();
             });
             updateRecurrence();
           },
         ),
-        if (frequency == 'weekly') ...[
+        if (frequency == RecurrenceFrequency.weekly) ...[
           Wrap(
             spacing: 8.0,
-            children: weekdays.map((day) {
-              bool isSelected = selectedDays.contains(day.toLowerCase());
+            children: DayOfWeek.values.map((day) {
+              bool isSelected = selectedDays.contains(day);
               return FilterChip(
-                label: Text(day),
+                label: Text(capitalizeFirstLetter(day.name)),
                 selected: isSelected,
                 onSelected: (selected) {
                   setState(() {
                     if (selected) {
-                      selectedDays.add(day.toLowerCase());
+                      selectedDays.add(day);
                     } else {
-                      selectedDays.remove(day.toLowerCase());
+                      selectedDays.remove(day);
                     }
                   });
                   updateRecurrence();
@@ -129,4 +129,12 @@ class _RecurrenceSelectorState extends State<RecurrenceSelector> {
       ],
     );
   }
+
+  String capitalizeFirstLetter(String text) {
+    if (text.isEmpty) {
+      return text;
+    }
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
 }
