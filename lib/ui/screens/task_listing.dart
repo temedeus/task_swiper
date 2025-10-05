@@ -191,37 +191,15 @@ class _TaskListingState extends State<TaskListing> {
         if (recurrence != null) {
           recurrenceId = await _databaseService.saveRecurrenceRule(recurrence);
         }
+        var taskListId = _taskList.id;
 
         if (task == null) {
           // Create new task
-          var taskListId = _taskList.id;
-          var id = await _databaseService.createItem(
+          await _databaseService.createItem(
             Task(null, text, Status.open, taskListId!,
                 recurrenceId: recurrenceId),
           );
-          setState(() {
-            _tasks = [
-              Task(id, text, Status.open, taskListId,
-                  recurrenceId: recurrenceId),
-              ..._tasks
-            ];
-          });
         } else {
-          // Update existing task
-          var updatedTasks = _tasks.map((existingTask) {
-            if (existingTask.id == task.id) {
-              return Task(
-                existingTask.id,
-                text,
-                existingTask.status,
-                task.taskListId,
-                recurrenceId: recurrenceId ?? existingTask.recurrenceId,
-              );
-            } else {
-              return existingTask;
-            }
-          }).toList();
-
           await _databaseService.updateTask(Task(
             task.id,
             text,
@@ -229,11 +207,13 @@ class _TaskListingState extends State<TaskListing> {
             task.taskListId,
             recurrenceId: recurrenceId ?? task.recurrenceId,
           ));
-
-          setState(() {
-            _tasks = updatedTasks;
-          });
         }
+
+        var updatedTasks = await _databaseService.getTasks(task!.taskListId);
+
+        setState(() {
+          _tasks = updatedTasks;
+        });
 
         //Navigator.pop(context);
       }

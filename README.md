@@ -1,6 +1,6 @@
 # Task Swiper
 
-Task Swiper is a simple task management.
+Task Swiper is a simple task management app.
 
 # Install Dependencies and Run a Flutter App
 

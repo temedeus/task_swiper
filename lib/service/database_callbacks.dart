@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+
 import '../model/status.dart';
 
 Future<void> onCreateCallback(Database database, int version) async {
@@ -8,8 +9,9 @@ Future<void> onCreateCallback(Database database, int version) async {
   );
   await database.execute(
     "CREATE TABLE task(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "task TEXT NOT NULL, status TEXT NOT NULL, taskListId INTEGER NOT NULL, "
-        "FOREIGN KEY(taskListId) REFERENCES taskList(id))",
+    "task TEXT NOT NULL, status TEXT NOT NULL, taskListId INTEGER NOT NULL, "
+    "createdAt TEXT, updatedAt TEXT, "
+    "FOREIGN KEY(taskListId) REFERENCES taskList(id))",
   );
 
   // Insert default task list
@@ -29,7 +31,8 @@ Future<void> onCreateCallback(Database database, int version) async {
   onUpgradeCallback(database, 0, version);
 }
 
-Future<void> onUpgradeCallback(Database database, int oldVersion, int newVersion) async {
+Future<void> onUpgradeCallback(
+    Database database, int oldVersion, int newVersion) async {
   if (oldVersion < 2) {
     // Add recurrence_id column to link tasks to recurrence rules
     await database.execute('ALTER TABLE task ADD COLUMN recurrenceId INTEGER');
