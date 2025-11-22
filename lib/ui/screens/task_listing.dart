@@ -290,6 +290,9 @@ class _TaskListingState extends State<TaskListing> with WidgetsBindingObserver {
             _tasks.remove(i);
           }),
         },
+        onReopenTaskPressed: i.status == Status.completed 
+            ? reopenTaskCallback(i) 
+            : null,
       ),
     );
   }
@@ -304,6 +307,9 @@ class _TaskListingState extends State<TaskListing> with WidgetsBindingObserver {
             existingTask.task,
             Status.open,
             existingTask.taskListId,
+            createdAt: existingTask.createdAt,
+            updatedAt: DateTime.now().toIso8601String(),
+            recurrenceId: existingTask.recurrenceId,
           );
           return _task;
         } else {
