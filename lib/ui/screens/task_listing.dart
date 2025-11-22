@@ -318,9 +318,21 @@ class _TaskListingState extends State<TaskListing> with WidgetsBindingObserver {
       }).toList();
 
       await _databaseService.updateTask(_task);
-      setState(() {
-        _tasks = updatedTasks;
-      });
+      
+      // Refresh the task list to ensure statuses are correct
+      final taskListId = _taskList?.id;
+      if (taskListId != null) {
+        final refreshedTasks = await _databaseService.getTasks(taskListId);
+        setState(() {
+          _tasks = refreshedTasks;
+          _refreshKey++; // Force FutureBuilder to refresh
+        });
+      } else {
+        setState(() {
+          _tasks = updatedTasks;
+          _refreshKey++; // Force FutureBuilder to refresh
+        });
+      }
     }
 
     return callback;
