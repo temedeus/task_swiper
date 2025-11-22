@@ -5,6 +5,7 @@ import '../model/status.dart';
 import '../model/task_list.dart';
 import '../model/recurrence_rules.dart';
 import 'database_callbacks.dart';
+import 'dart:convert';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -29,12 +30,35 @@ class DatabaseService {
   }
 
   Future<int> createItem(Task task) async {
-    return database.insert('task', task.toMap(),
+    final now = DateTime.now().toIso8601String();
+    final taskMap = task.toMap();
+    // Set createdAt if not already set, always set updatedAt
+    if (taskMap['createdAt'] == null) {
+      taskMap['createdAt'] = now;
+    }
+    taskMap['updatedAt'] = now;
+    return database.insert('task', taskMap,
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<int> updateTask(Task task) async {
-    return database.update('task', task.toMap(),
+    final now = DateTime.now().toIso8601String();
+    final taskMap = task.toMap();
+    // Preserve createdAt if it exists, always update updatedAt
+    if (taskMap['createdAt'] == null) {
+      // If updating and createdAt is null, try to get it from the database
+      final existing = await database.query('task', 
+          columns: ['createdAt'], 
+          where: "id = ?", 
+          whereArgs: [task.id!]);
+      if (existing.isNotEmpty && existing.first['createdAt'] != null) {
+        taskMap['createdAt'] = existing.first['createdAt'];
+      } else {
+        taskMap['createdAt'] = now;
+      }
+    }
+    taskMap['updatedAt'] = now;
+    return database.update('task', taskMap,
         conflictAlgorithm: ConflictAlgorithm.replace,
         where: "id = ?",
         whereArgs: [task.id!]);
@@ -119,5 +143,18 @@ class DatabaseService {
       return RecurrenceRules.fromMap(queryResult.first);
     }
     return null;
+  }
+
+  /// Get all completed tasks that have recurrence rules
+  Future<List<Map<String, dynamic>>> getCompletedTasksWithRecurrence() async {
+    final List<Map<String, dynamic>> queryResult = await database.rawQuery('''
+      SELECT t.*, r.id as recurrenceRuleId, r.frequency, r.interval, r.daysOfWeek, r.endDate, 
+             r.maxOccurrences, r.timeOfDay
+      FROM task t
+      INNER JOIN recurrenceRules r ON t.recurrenceId = r.id
+      WHERE t.status = ?
+    ''', [Status.completed]);
+    
+    return queryResult;
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
+import 'package:taskswiper/service/recurrence_service.dart';
 import 'package:taskswiper/service/service_locator.dart';
 import 'package:taskswiper/ui/screens/task_listing.dart';
 import 'package:taskswiper/ui/widgets/task_list_drawer.dart';
@@ -37,19 +38,64 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   bool isReady = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     locator<DatabaseService>().initializeDB().whenComplete(
-          () => setState(
-            () {
-              isReady = true;
-            },
-          ),
+          () async {
+            // Check for tasks that should be reopened
+            await _checkAndNotifyRecurrence();
+            
+            setState(
+              () {
+                isReady = true;
+              },
+            );
+          },
         );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Check for recurrence when app comes back to foreground
+    if (state == AppLifecycleState.resumed && isReady) {
+      _checkAndNotifyRecurrence();
+    }
+  }
+
+  /// Check for tasks that should be reopened and show notification
+  Future<void> _checkAndNotifyRecurrence() async {
+    final recurrenceService = locator<RecurrenceService>();
+    final reopenedTasks = await recurrenceService.checkAndReopenTasks();
+    
+    // Show notification if tasks were reopened
+    if (reopenedTasks.isNotEmpty && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                reopenedTasks.length == 1
+                    ? 'Task reopened: ${reopenedTasks.first}'
+                    : '${reopenedTasks.length} tasks have been reopened',
+              ),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      });
+    }
   }
 
   @override

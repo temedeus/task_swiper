@@ -5,6 +5,7 @@ import 'package:taskswiper/model/recurrence_rules.dart';
 import 'package:taskswiper/model/task.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
+import 'package:taskswiper/service/recurrence_service.dart';
 import 'package:taskswiper/service/service_locator.dart';
 import 'package:taskswiper/ui/widgets/task_item.dart';
 
@@ -19,24 +20,43 @@ class TaskListing extends StatefulWidget {
   State<TaskListing> createState() => _TaskListingState();
 }
 
-class _TaskListingState extends State<TaskListing> {
+class _TaskListingState extends State<TaskListing> with WidgetsBindingObserver {
   late DatabaseService _databaseService;
   List<Task> _tasks = [];
   TaskList? _taskList;
   bool _showCompleted = false;
   bool _initialSetup = true;
+  int _refreshKey = 0; // Used to force FutureBuilder refresh
 
   _TaskListingState();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _databaseService = locator<DatabaseService>();
     _databaseService.getDefaultTaskList().then((taskList) {
       setState(() {
         _taskList = taskList;
       });
     }).catchError((error) {});
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh tasks when app comes back to foreground
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        _refreshKey++; // Force FutureBuilder to refresh
+      });
+    }
   }
 
   @override
@@ -61,7 +81,7 @@ class _TaskListingState extends State<TaskListing> {
 
         return FutureBuilder<List<Task>>(
           future: _databaseService.getTasks(taskListId!),
-          key: ValueKey(_showCompleted),
+          key: ValueKey('$_showCompleted-$_refreshKey'),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return loadingIndicator();
@@ -205,6 +225,8 @@ class _TaskListingState extends State<TaskListing> {
             text,
             task.status,
             task.taskListId,
+            createdAt: task.createdAt,
+            updatedAt: DateTime.now().toIso8601String(),
             recurrenceId: recurrenceId ?? task.recurrenceId,
           ));
         }
@@ -307,6 +329,9 @@ class _TaskListingState extends State<TaskListing> {
           i.task,
           Status.completed,
           i.taskListId,
+          createdAt: existingTask.createdAt,
+          updatedAt: DateTime.now().toIso8601String(),
+          recurrenceId: existingTask.recurrenceId,
         );
         return newTask;
       } else {
@@ -316,14 +341,47 @@ class _TaskListingState extends State<TaskListing> {
 
     await _databaseService.updateTask(newTask);
 
-    setState(() {
-      _tasks = [...updatedTasks];
-    });
+    // Check for tasks that should be reopened
+    final recurrenceService = locator<RecurrenceService>();
+    final reopenedTasks = await recurrenceService.checkAndReopenTasks();
+
+    // Refresh tasks if any were reopened
+    if (reopenedTasks.isNotEmpty) {
+      final taskListId = _taskList?.id;
+      if (taskListId != null) {
+        final refreshedTasks = await _databaseService.getTasks(taskListId);
+        setState(() {
+          _tasks = refreshedTasks;
+        });
+      }
+    } else {
+      setState(() {
+        _tasks = [...updatedTasks];
+      });
+    }
+
+    // Show completion notification
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Task completed!'),
       ),
     );
+
+    // Show notification if tasks were reopened
+    if (reopenedTasks.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              reopenedTasks.length == 1
+                  ? 'Task reopened: ${reopenedTasks.first}'
+                  : '${reopenedTasks.length} tasks have been reopened',
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      });
+    }
   }
 
   deleteTask(i) async {

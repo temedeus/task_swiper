@@ -39,6 +39,8 @@ class Task {
       'status': status,
       'taskListId': taskListId,
       'recurrenceId': recurrenceId,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
     };
   }
 }
