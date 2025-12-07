@@ -1,0 +1,27 @@
+{
+  "@@locale": "fi",
+  "appTitle": "Task Swiper",
+  "taskLists": "Tehtävälistat",
+  "addTasklist": "Lisää tehtävälista",
+  "completed": "Valmiit",
+  "general": "Yleinen",
+  "showUncompleted": "Näytä keskeneräiset",
+  "about": "Tietoja",
+  "addTask": "Lisää tehtävä",
+  "showCompleted": "Näytä valmiit",
+  "noTasks": "Ei tehtäviä",
+  "taskCompleted": "Tehtävä valmis!",
+  "taskDeleted": "Tehtävä poistettu",
+  "taskReopened": "Tehtävä avattu uudelleen: {taskText}",
+  "tasksReopened": "{count} tehtävää avattu uudelleen",
+  "reopenTask": "Avaa tehtävä uudelleen",
+  "pleaseSelectOrCreate": "Valitse tai luo uusi tehtävälista!",
+  "wellDoneComplete": "Hienoa, kaikki on valmista!",
+  "tasksOpen": "{openCount} / {totalCount} tehtävää avoinna",
+  "startingUp": "Käynnistetään...",
+  "somethingWentWrong": "Jotain meni pieleen :(",
+  "language": "Kieli",
+  "english": "Englanti",
+  "finnish": "Suomi"
+}
+

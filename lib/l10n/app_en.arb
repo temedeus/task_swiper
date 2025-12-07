@@ -1,0 +1,114 @@
+{
+  "@@locale": "en",
+  "appTitle": "Task Swiper",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "taskLists": "Task lists",
+  "@taskLists": {
+    "description": "Title for task lists section"
+  },
+  "addTasklist": "Add tasklist",
+  "@addTasklist": {
+    "description": "Button to add a new task list"
+  },
+  "completed": "Completed",
+  "@completed": {
+    "description": "Label for completed section"
+  },
+  "general": "General",
+  "@general": {
+    "description": "Label for general section"
+  },
+  "showUncompleted": "Show uncompleted",
+  "@showUncompleted": {
+    "description": "Button to show uncompleted tasks"
+  },
+  "about": "About",
+  "@about": {
+    "description": "Button to show about dialog"
+  },
+  "addTask": "Add task",
+  "@addTask": {
+    "description": "Button to add a new task"
+  },
+  "showCompleted": "Show completed",
+  "@showCompleted": {
+    "description": "Switch label to show completed tasks"
+  },
+  "noTasks": "No tasks",
+  "@noTasks": {
+    "description": "Message when there are no tasks"
+  },
+  "taskCompleted": "Task completed!",
+  "@taskCompleted": {
+    "description": "Notification when a task is completed"
+  },
+  "taskDeleted": "Task deleted",
+  "@taskDeleted": {
+    "description": "Notification when a task is deleted"
+  },
+  "taskReopened": "Task reopened: {taskText}",
+  "@taskReopened": {
+    "description": "Notification when a task is reopened",
+    "placeholders": {
+      "taskText": {
+        "type": "String"
+      }
+    }
+  },
+  "tasksReopened": "{count} tasks have been reopened",
+  "@tasksReopened": {
+    "description": "Notification when multiple tasks are reopened",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reopenTask": "Reopen task",
+  "@reopenTask": {
+    "description": "Button to reopen a completed task"
+  },
+  "pleaseSelectOrCreate": "Please select or create new task list!",
+  "@pleaseSelectOrCreate": {
+    "description": "Message when no task list is selected"
+  },
+  "wellDoneComplete": "Well done, the world is complete!",
+  "@wellDoneComplete": {
+    "description": "Message when all tasks are completed"
+  },
+  "tasksOpen": "{openCount} out of {totalCount} tasks open",
+  "@tasksOpen": {
+    "description": "Display of task counts",
+    "placeholders": {
+      "openCount": {
+        "type": "int"
+      },
+      "totalCount": {
+        "type": "int"
+      }
+    }
+  },
+  "startingUp": "Starting up...",
+  "@startingUp": {
+    "description": "Message shown while app is initializing"
+  },
+  "somethingWentWrong": "Something went wrong :(",
+  "@somethingWentWrong": {
+    "description": "Error message"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Label for language selector"
+  },
+  "english": "English",
+  "@english": {
+    "description": "English language name"
+  },
+  "finnish": "Finnish",
+  "@finnish": {
+    "description": "Finnish language name"
+  }
+}
+

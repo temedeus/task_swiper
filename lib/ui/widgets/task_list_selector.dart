@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:taskswiper/model/task_list.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
@@ -12,6 +13,7 @@ class TaskListSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     final databaseService = locator<DatabaseService>();
     final selectedTaskListProvider = Provider.of<SelectedTaskListProvider>(context);
 
@@ -21,7 +23,7 @@ class TaskListSelector extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          return const Center(child: Text("Something went wrong :("));
+          return Center(child: Text(localizations.somethingWentWrong));
         } else {
           final taskLists = snapshot.data ?? [];
           
@@ -32,7 +34,7 @@ class TaskListSelector extends StatelessWidget {
               if (countsSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               } else if (countsSnapshot.hasError) {
-                return const Center(child: Text("Something went wrong :("));
+                return Center(child: Text(localizations.somethingWentWrong));
               } else {
                 final taskListCounts = countsSnapshot.data ?? [];
                 
@@ -44,11 +46,11 @@ class TaskListSelector extends StatelessWidget {
                 if (taskListsWithOpenTasks.isEmpty) {
                   // Check if there are task lists but all are complete
                   if (taskLists.isNotEmpty) {
-                    return const Center(
-                        child: Text("Well done, the world is complete!"));
+                    return Center(
+                        child: Text(localizations.wellDoneComplete));
                   } else {
-                    return const Center(
-                        child: Text("Please select or create new task list!"));
+                    return Center(
+                        child: Text(localizations.pleaseSelectOrCreate));
                   }
                 }
                 
@@ -65,7 +67,7 @@ class TaskListSelector extends StatelessWidget {
                       margin: const EdgeInsets.symmetric(vertical: 8.0),
                       child: ListTile(
                         title: Text(taskList.title),
-                        subtitle: Text('$openCount out of $totalCount tasks open'),
+                        subtitle: Text(localizations.tasksOpen(openCount, totalCount)),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
                           selectedTaskListProvider.setSelectedTaskListId(taskList);

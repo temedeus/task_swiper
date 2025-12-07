@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:taskswiper/providers/language_provider.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/ui/dialogs/add_task_list_dialog.dart';
@@ -52,9 +54,12 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     return Drawer(
       child: Consumer<SelectedTaskListProvider>(
           builder: (context, selectedTaskListIdProvider, _) {
+        return Consumer<LanguageProvider>(
+          builder: (context, languageProvider, _) {
         return ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -75,7 +80,7 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                     ),
                   ],
                 ),
-                child: const Text('Task lists'),
+                child: Text(localizations.taskLists),
               ),
             ),
             ...createTaskListItems(false, selectedTaskListIdProvider),
@@ -93,19 +98,50 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Text("Add tasklist"),
-                        Icon(Icons.add),
+                        Text(localizations.addTasklist),
+                        const Icon(Icons.add),
                       ],
                     ),
                   ),
                 ),
               ),
             ),
-            const SeparatorWithLabel(label: "Completed"),
+            SeparatorWithLabel(label: localizations.completed),
             ...createTaskListItems(true, selectedTaskListIdProvider),
-            const SeparatorWithLabel(label: "General"),
+            SeparatorWithLabel(label: localizations.general),
+            // Language selector
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                children: [
+                  Text(
+                    localizations.language,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  const Spacer(),
+                  DropdownButton<Locale>(
+                    value: languageProvider.locale,
+                    items: const [
+                      DropdownMenuItem(
+                        value: Locale('en'),
+                        child: Text('English'),
+                      ),
+                      DropdownMenuItem(
+                        value: Locale('fi'),
+                        child: Text('Suomi'),
+                      ),
+                    ],
+                    onChanged: (Locale? newLocale) {
+                      if (newLocale != null) {
+                        languageProvider.setLocale(newLocale);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
             SizedBox(
               child: Align(
                 alignment: Alignment.centerLeft,
@@ -118,10 +154,10 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Text("Show uncompleted"),
-                        Padding(
+                        Text(localizations.showUncompleted),
+                        const Padding(
                           padding: EdgeInsets.only(left: 8.0),
                           child: Icon(Icons.list),
                         ),
@@ -145,22 +181,24 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     ),
-                    child: buildAboutButton(),
+                    child: buildAboutButton(localizations),
                   ),
                 ),
               ),
             ),
           ],
         );
+          },
+        );
       }),
     );
   }
 
-  Row buildAboutButton() {
-    return const Row(
+  Row buildAboutButton(AppLocalizations localizations) {
+    return Row(
       children: [
-        Text("About"),
-        Padding(
+        Text(localizations.about),
+        const Padding(
           padding: EdgeInsets.only(left: 8.0),
           child: Icon(Icons.info_outline),
         ),

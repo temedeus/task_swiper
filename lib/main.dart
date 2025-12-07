@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:taskswiper/providers/language_provider.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/service/recurrence_service.dart';
@@ -17,22 +20,39 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Task Swiper',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => SelectedTaskListProvider()),
+      ],
+      child: Consumer<LanguageProvider>(
+        builder: (context, languageProvider, _) {
+          return MaterialApp(
+            title: 'Task Swiper',
+            theme: ThemeData(
+              primarySwatch: Colors.blue,
+            ),
+            locale: languageProvider.locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'), // English
+              Locale('fi'), // Finnish
+            ],
+            home: const MyHomePage(),
+          );
+        },
       ),
-      home: ChangeNotifierProvider(
-          create: (context) => SelectedTaskListProvider(),
-          child: MyHomePage(title: 'Task Swiper')),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -87,8 +107,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             SnackBar(
               content: Text(
                 reopenedTasks.length == 1
-                    ? 'Task reopened: ${reopenedTasks.first}'
-                    : '${reopenedTasks.length} tasks have been reopened',
+                    ? AppLocalizations.of(context)!.taskReopened(reopenedTasks.first)
+                    : AppLocalizations.of(context)!.tasksReopened(reopenedTasks.length),
               ),
               duration: const Duration(seconds: 3),
             ),
@@ -100,14 +120,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     return Scaffold(
         appBar: AppBar(
-          title: Text(widget.title),
+          title: Text(localizations.appTitle),
         ),
         body: isReady
             ? TaskListing()
             : Center(
-                child: Text("Starting up..."),
+                child: Text(localizations.startingUp),
               ),
         drawer: TaskListDrawer());
   }
