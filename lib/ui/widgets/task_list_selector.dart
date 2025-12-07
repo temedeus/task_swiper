@@ -42,8 +42,14 @@ class TaskListSelector extends StatelessWidget {
                     .toList();
                 
                 if (taskListsWithOpenTasks.isEmpty) {
-                  return const Center(
-                      child: Text("Please select or create new task list!"));
+                  // Check if there are task lists but all are complete
+                  if (taskLists.isNotEmpty) {
+                    return const Center(
+                        child: Text("Well done, every thing is complete!"));
+                  } else {
+                    return const Center(
+                        child: Text("Please select or create new task list!"));
+                  }
                 }
                 
                 return ListView.builder(
