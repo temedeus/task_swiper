@@ -45,7 +45,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             TextField(
               keyboardType: TextInputType.multiline,
               maxLines: 5,
-              maxLength: 100,
+              maxLength: 150,
               controller: myController,
               decoration: InputDecoration(
                 hintText: "Write your note here",
