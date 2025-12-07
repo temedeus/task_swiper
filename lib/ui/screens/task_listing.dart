@@ -8,6 +8,7 @@ import 'package:taskswiper/service/database_service.dart';
 import 'package:taskswiper/service/recurrence_service.dart';
 import 'package:taskswiper/service/service_locator.dart';
 import 'package:taskswiper/ui/widgets/task_item.dart';
+import 'package:taskswiper/ui/widgets/task_list_selector.dart';
 
 import '../../model/status.dart';
 import '../../model/task_list.dart';
@@ -74,8 +75,7 @@ class _TaskListingState extends State<TaskListing> with WidgetsBindingObserver {
         }
 
         if (_taskList == null || _taskList?.id == null) {
-          return const Center(
-              child: Text("Please select or create new task list!"));
+          return const TaskListSelector();
         }
         final taskListId = _taskList?.id;
 
