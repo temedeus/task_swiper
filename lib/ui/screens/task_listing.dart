@@ -231,13 +231,11 @@ class _TaskListingState extends State<TaskListing> with WidgetsBindingObserver {
           ));
         }
 
-        var updatedTasks = await _databaseService.getTasks(task!.taskListId);
-
+        // Refresh the FutureBuilder by incrementing the refresh key
+        // This forces the FutureBuilder to rebuild with fresh data from the database
         setState(() {
-          _tasks = updatedTasks;
+          _refreshKey++;
         });
-
-        //Navigator.pop(context);
       }
     }
 
