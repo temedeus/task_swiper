@@ -1,6 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:taskswiper/model/task.dart';
 import 'package:taskswiper/providers/language_provider.dart';
 import 'package:taskswiper/providers/selected_task_list_provider.dart';
 import 'package:taskswiper/service/database_service.dart';
@@ -9,6 +15,7 @@ import 'package:taskswiper/ui/widgets/about_app_dialog.dart';
 import 'package:taskswiper/ui/widgets/actionable_icon_button.dart';
 import 'package:taskswiper/ui/widgets/separator.dart';
 
+import '../../model/status.dart';
 import '../../model/task_list.dart';
 import '../../service/service_locator.dart';
 import '../dialogs/confirm_dialog.dart';
@@ -142,6 +149,39 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
                 ],
               ),
             ),
+            // Export / Import tasks
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              child: ElevatedButton(
+                onPressed: () => _exportTasks(context, selectedTaskListIdProvider),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.download),
+                    const SizedBox(width: 8),
+                    const Text('Export tasks'),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              child: ElevatedButton(
+                onPressed: () => _importTasks(context, selectedTaskListIdProvider),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.upload),
+                    const SizedBox(width: 8),
+                    const Text('Import tasks'),
+                  ],
+                ),
+              ),
+            ),
             SizedBox(
               child: Align(
                 alignment: Alignment.centerLeft,
@@ -204,6 +244,118 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
         ),
       ],
     );
+  }
+
+  Future<void> _exportTasks(
+      BuildContext context, SelectedTaskListProvider selectedTaskListProvider) async {
+    final taskList = selectedTaskListProvider.selectedTasklist;
+    if (taskList == null || taskList.id == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Select a task list first')),
+      );
+      return;
+    }
+
+    try {
+      final tasks = await _databaseService.getTasks(taskList.id!);
+      final exportData = tasks.map((t) => t.toMap()).toList();
+      final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
+
+      // Get the appropriate directory (Downloads on desktop, Documents on mobile)
+      Directory? directory;
+      if (Platform.isAndroid || Platform.isIOS) {
+        directory = await getApplicationDocumentsDirectory();
+      } else {
+        // For desktop platforms, try to get Downloads directory
+        final downloadsPath = Platform.environment['HOME'] ?? 
+                              Platform.environment['USERPROFILE'] ?? '';
+        if (downloadsPath.isNotEmpty) {
+          directory = Directory('$downloadsPath/Downloads');
+          if (!await directory.exists()) {
+            directory = await getApplicationDocumentsDirectory();
+          }
+        } else {
+          directory = await getApplicationDocumentsDirectory();
+        }
+      }
+
+      // Create filename with timestamp
+      final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.')[0];
+      final filename = 'task_swiper_export_${taskList.title.replaceAll(RegExp(r'[^\w\s-]'), '_')}_$timestamp.json';
+      final file = File('${directory.path}/$filename');
+
+      await file.writeAsString(jsonStr);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Tasks exported to: ${file.path}'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error exporting tasks: $e')),
+      );
+    }
+  }
+
+  Future<void> _importTasks(
+      BuildContext context, SelectedTaskListProvider selectedTaskListProvider) async {
+    final taskList = selectedTaskListProvider.selectedTasklist;
+    if (taskList == null || taskList.id == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Select a task list first')),
+      );
+      return;
+    }
+
+    try {
+      // Pick a file
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result == null || result.files.single.path == null) {
+        return; // User cancelled
+      }
+
+      final filePath = result.files.single.path!;
+      final file = File(filePath);
+      final jsonStr = await file.readAsString();
+      final jsonData = jsonDecode(jsonStr) as List;
+      
+      int importedCount = 0;
+
+      for (final item in jsonData) {
+        final taskMap = item as Map<String, dynamic>;
+        final task = Task(
+          null, // New task, no ID
+          taskMap['task'] as String? ?? '',
+          taskMap['status'] as String? ?? Status.open,
+          taskList.id!,
+          recurrenceId: taskMap['recurrenceId'] as int?,
+        );
+        await _databaseService.createItem(task);
+        importedCount++;
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Imported $importedCount task(s)')),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error importing tasks: $e')),
+      );
+    }
   }
 
   buildEditTasklistDialog({TaskList? taskList}) {
