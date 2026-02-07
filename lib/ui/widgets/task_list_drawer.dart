@@ -262,29 +262,20 @@ class _TaskListDrawerState extends State<TaskListDrawer> {
       final exportData = tasks.map((t) => t.toMap()).toList();
       final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
 
-      // Get the appropriate directory (Downloads on desktop, Documents on mobile)
-      Directory? directory;
-      if (Platform.isAndroid || Platform.isIOS) {
-        directory = await getApplicationDocumentsDirectory();
-      } else {
-        // For desktop platforms, try to get Downloads directory
-        final downloadsPath = Platform.environment['HOME'] ?? 
-                              Platform.environment['USERPROFILE'] ?? '';
-        if (downloadsPath.isNotEmpty) {
-          directory = Directory('$downloadsPath/Downloads');
-          if (!await directory.exists()) {
-            directory = await getApplicationDocumentsDirectory();
-          }
-        } else {
-          directory = await getApplicationDocumentsDirectory();
-        }
+      // Create default filename with timestamp
+      final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.')[0];
+      final defaultFilename = 'task_swiper_export_${taskList.title.replaceAll(RegExp(r'[^\w\s-]'), '_')}_$timestamp.json';
+
+      // Let user choose directory to save the file
+      String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: 'Choose directory to save export',
+      );
+
+      if (selectedDirectory == null) {
+        return; // User cancelled
       }
 
-      // Create filename with timestamp
-      final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.')[0];
-      final filename = 'task_swiper_export_${taskList.title.replaceAll(RegExp(r'[^\w\s-]'), '_')}_$timestamp.json';
-      final file = File('${directory.path}/$filename');
-
+      final file = File('$selectedDirectory/$defaultFilename');
       await file.writeAsString(jsonStr);
 
       if (!mounted) return;
