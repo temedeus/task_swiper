@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:taskswiper/model/recurrence_rules.dart';
@@ -97,7 +101,28 @@ class _TaskListingState extends State<TaskListing> with WidgetsBindingObserver {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  buildSwitchWrapper("Show completed", allTasksCompleted),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.download),
+                            onPressed: () => _exportTasks(context),
+                            tooltip: 'Export tasks',
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.upload),
+                            onPressed: () => _importTasks(context),
+                            tooltip: 'Import tasks',
+                          ),
+                        ],
+                      ),
+                      buildSwitchWrapper("Show completed", allTasksCompleted),
+                    ],
+                  ),
                   Expanded(
                     child: Center(
                       child: Column(
@@ -138,7 +163,7 @@ class _TaskListingState extends State<TaskListing> with WidgetsBindingObserver {
                 );
               }).toList(),
             ),
-      buildAddTaskButton()
+      buildAddTaskButton(),
     ];
   }
 
@@ -413,5 +438,109 @@ class _TaskListingState extends State<TaskListing> with WidgetsBindingObserver {
         content: Text('Task deleted'),
       ),
     );
+  }
+
+  Future<void> _exportTasks(BuildContext context) async {
+    final _taskList = this._taskList;
+    if (_taskList == null || _taskList.id == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No task list selected')),
+      );
+      return;
+    }
+
+    try {
+      final tasks = await _databaseService.getTasks(_taskList.id!);
+      final exportData = tasks.map((t) => t.toMap()).toList();
+      final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
+
+      // Create default filename with timestamp
+      final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.')[0];
+      final defaultFilename = 'task_swiper_export_${_taskList.title.replaceAll(RegExp(r'[^\w\s-]'), '_')}_$timestamp.json';
+
+      // Let user choose directory to save the file
+      String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: 'Choose directory to save export',
+      );
+
+      if (selectedDirectory == null) {
+        return; // User cancelled
+      }
+
+      final file = File('$selectedDirectory/$defaultFilename');
+      await file.writeAsString(jsonStr);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Tasks exported to: ${file.path}'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error exporting tasks: $e')),
+      );
+    }
+  }
+
+  Future<void> _importTasks(BuildContext context) async {
+    final _taskList = this._taskList;
+    if (_taskList == null || _taskList.id == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No task list selected')),
+      );
+      return;
+    }
+
+    try {
+      // Pick a file
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result == null || result.files.single.path == null) {
+        return; // User cancelled
+      }
+
+      final filePath = result.files.single.path!;
+      final file = File(filePath);
+      final jsonStr = await file.readAsString();
+      final jsonData = jsonDecode(jsonStr) as List;
+      
+      int importedCount = 0;
+
+      for (final item in jsonData) {
+        final taskMap = item as Map<String, dynamic>;
+        final task = Task(
+          null, // New task, no ID
+          taskMap['task'] as String? ?? '',
+          taskMap['status'] as String? ?? Status.open,
+          _taskList.id!,
+          recurrenceId: taskMap['recurrenceId'] as int?,
+        );
+        await _databaseService.createItem(task);
+        importedCount++;
+      }
+
+      // Refresh the task list after import
+      setState(() {
+        _refreshKey++;
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Imported $importedCount task(s)')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error importing tasks: $e')),
+      );
+    }
   }
 }
