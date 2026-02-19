@@ -33,6 +33,14 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     }
   }
 
+  bool _canSave() {
+    if (myController.text.isEmpty) return false;
+    if (isRecurring && (recurrenceData == null || recurrenceData!.timeOfDay == null)) {
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -73,6 +81,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             if (isRecurring)
               RecurrenceSelector(
                 initialRecurrence: recurrenceData,
+                showTimeError: recurrenceData != null && recurrenceData!.timeOfDay == null,
                 onRecurrenceChanged: (recurrence) {
                   setState(() {
                     recurrenceData = recurrence;
@@ -82,13 +91,28 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
 
             const SizedBox(height: 10),
             TextButton(
-              onPressed: () {
-                if (myController.text.isNotEmpty) {
-                  widget.callback(myController.text, recurrenceData);
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Save'),
+              onPressed: _canSave()
+                  ? () {
+                      widget.callback(myController.text, recurrenceData);
+                      Navigator.pop(context);
+                    }
+                  : () {
+                      if (isRecurring && (recurrenceData == null || recurrenceData!.timeOfDay == null)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please set a time for the recurring task.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        setState(() {}); // Refresh to show time selector error state
+                      }
+                    },
+              child: Text(
+                'Save',
+                style: TextStyle(
+                  color: _canSave() ? null : Theme.of(context).disabledColor,
+                ),
+              ),
             ),
             TextButton(
               onPressed: () {

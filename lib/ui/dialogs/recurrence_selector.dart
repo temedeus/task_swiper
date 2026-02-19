@@ -6,9 +6,15 @@ import 'package:taskswiper/model/recurrence_rules.dart';
 class RecurrenceSelector extends StatefulWidget {
   final Function(RecurrenceRules?) onRecurrenceChanged;
   final RecurrenceRules? initialRecurrence;
+  /// When true, the time selector is shown with error styling (time is required for recurrence).
+  final bool showTimeError;
 
-  const RecurrenceSelector({Key? key, required this.onRecurrenceChanged, this.initialRecurrence})
-      : super(key: key);
+  const RecurrenceSelector({
+    Key? key,
+    required this.onRecurrenceChanged,
+    this.initialRecurrence,
+    this.showTimeError = false,
+  }) : super(key: key);
 
   @override
   State<RecurrenceSelector> createState() => _RecurrenceSelectorState();
@@ -110,20 +116,33 @@ class _RecurrenceSelectorState extends State<RecurrenceSelector> {
               updateRecurrence();
             },
           ),
-          TextButton(
-            onPressed: () async {
-              TimeOfDay? pickedTime = await showTimePicker(
-                context: context,
-                initialTime: selectedTime ?? TimeOfDay.now(),
-              );
-              if (pickedTime != null) {
-                setState(() {
-                  selectedTime = pickedTime;
-                });
-                updateRecurrence();
-              }
-            },
-            child: Text(selectedTime == null ? "Pick Time" : "Time: ${selectedTime!.format(context)}"),
+          Container(
+            decoration: widget.showTimeError
+                ? BoxDecoration(
+                    border: Border.all(color: Theme.of(context).colorScheme.error, width: 2),
+                    borderRadius: BorderRadius.circular(8),
+                  )
+                : null,
+            child: TextButton(
+              onPressed: () async {
+                TimeOfDay? pickedTime = await showTimePicker(
+                  context: context,
+                  initialTime: selectedTime ?? TimeOfDay.now(),
+                );
+                if (pickedTime != null) {
+                  setState(() {
+                    selectedTime = pickedTime;
+                  });
+                  updateRecurrence();
+                }
+              },
+              child: Text(
+                selectedTime == null ? "Pick Time (required)" : "Time: ${selectedTime!.format(context)}",
+                style: widget.showTimeError && selectedTime == null
+                    ? TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.w500)
+                    : null,
+              ),
+            ),
           ),
         ],
       ],
