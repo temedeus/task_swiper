@@ -35,8 +35,12 @@ class RecurrenceService {
         continue;
       }
 
+      // Use local time for recurrence math (weekday and date are user's local)
+      final completedAtLocal = updatedAt.isUtc ? updatedAt.toLocal() : updatedAt;
+      final nowLocal = now.isUtc ? now.toLocal() : now;
+
       // Check if task should be reopened
-      if (shouldReopenTask(updatedAt, recurrence, now)) {
+      if (shouldReopenTask(completedAtLocal, recurrence, nowLocal)) {
         // Reopen the task
         final reopenedTask = Task(
           task.id,
@@ -146,38 +150,38 @@ class RecurrenceService {
   /// Check if a weekly recurring task should be reopened
   bool _shouldReopenWeekly(
       DateTime completedAt, RecurrenceRules rule, DateTime now) {
-    // Calculate base date: interval weeks from completion
-    final baseDate = completedAt.add(Duration(days: rule.interval * 7));
-    
     // Parse time of day (default to noon if not set)
     final timeOfDay = _parseTimeOfDay(rule.timeOfDay);
 
-    // If daysOfWeek is set, find the earliest occurrence of any specified day
+    // If daysOfWeek is set, find the next occurrence of any specified day at timeOfDay after completion
     if (rule.daysOfWeek != null && rule.daysOfWeek!.isNotEmpty) {
-      // Find the earliest target date from the specified days
-      DateTime? earliestTargetDate;
+      // For each selected day, get the next occurrence at timeOfDay that is strictly after completedAt
+      DateTime? earliestTargetDateTime;
       for (final dayOfWeek in rule.daysOfWeek!) {
-        final targetDate = _getNextOccurrenceOfDay(baseDate, dayOfWeek);
-        if (earliestTargetDate == null || targetDate.isBefore(earliestTargetDate)) {
-          earliestTargetDate = targetDate;
+        final candidate = _getNextOccurrenceOfDayAtTime(
+          after: completedAt,
+          dayOfWeek: dayOfWeek,
+          hour: timeOfDay.hour,
+          minute: timeOfDay.minute,
+        );
+        if (candidate != null &&
+            (earliestTargetDateTime == null || candidate.isBefore(earliestTargetDateTime))) {
+          earliestTargetDateTime = candidate;
         }
       }
-      
-      if (earliestTargetDate != null) {
-        final targetDateTime = DateTime(
-          earliestTargetDate.year,
-          earliestTargetDate.month,
-          earliestTargetDate.day,
-          timeOfDay.hour,
-          timeOfDay.minute,
-        );
 
-        // Task should be reopened if now is at or past the target date/time
-        return now.isAfter(targetDateTime) || now.isAtSameMomentAs(targetDateTime);
+      if (earliestTargetDateTime != null) {
+        // interval: 1 = first occurrence, 2 = add 1 week, etc.
+        final targetDateTime = rule.interval <= 1
+            ? earliestTargetDateTime
+            : earliestTargetDateTime.add(Duration(days: (rule.interval - 1) * 7));
+
+        return !now.isBefore(targetDateTime);
       }
       return false;
     } else {
-      // No daysOfWeek set, use the same day as completion
+      // No daysOfWeek set: same weekday as completion, interval weeks later
+      final baseDate = completedAt.add(Duration(days: rule.interval * 7));
       final targetDateTime = DateTime(
         baseDate.year,
         baseDate.month,
@@ -185,25 +189,32 @@ class RecurrenceService {
         timeOfDay.hour,
         timeOfDay.minute,
       );
-
-      return now.isAfter(targetDateTime) || now.isAtSameMomentAs(targetDateTime);
+      return !now.isBefore(targetDateTime);
     }
   }
 
-  /// Get the next occurrence of a specific day of week from a base date
-  DateTime _getNextOccurrenceOfDay(DateTime baseDate, DayOfWeek dayOfWeek) {
+  /// Next occurrence of [dayOfWeek] at [hour]:[minute] that is strictly after [after].
+  DateTime? _getNextOccurrenceOfDayAtTime({
+    required DateTime after,
+    required DayOfWeek dayOfWeek,
+    required int hour,
+    required int minute,
+  }) {
     final targetWeekday = _dayOfWeekToInt(dayOfWeek);
-    final currentWeekday = baseDate.weekday;
-    
+    final currentWeekday = after.weekday;
     int daysToAdd = (targetWeekday - currentWeekday) % 7;
+    // If same day, we need a time that is after [after]. If that time today has passed, use next week.
     if (daysToAdd == 0) {
-      // Same day, check if we should use this week or next
-      // For simplicity, if it's the same day, we'll use it
-      daysToAdd = 0;
+      final sameDayTime = DateTime(after.year, after.month, after.day, hour, minute);
+      if (after.isBefore(sameDayTime)) {
+        return sameDayTime;
+      }
+      daysToAdd = 7;
     }
-    
-    return baseDate.add(Duration(days: daysToAdd));
+    final nextDate = after.add(Duration(days: daysToAdd));
+    return DateTime(nextDate.year, nextDate.month, nextDate.day, hour, minute);
   }
+
 
   /// Convert DayOfWeek enum to int (Monday = 1, Sunday = 7)
   int _dayOfWeekToInt(DayOfWeek day) {
