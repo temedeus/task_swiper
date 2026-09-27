@@ -13,6 +13,7 @@ import 'package:taskswiper/service/recurrence_service.dart';
 import 'package:taskswiper/service/service_locator.dart';
 import 'package:taskswiper/ui/widgets/task_item.dart';
 import 'package:taskswiper/ui/widgets/task_list_selector.dart';
+import 'package:taskswiper/ui/widgets/voice_command_button.dart';
 
 import '../../model/status.dart';
 import '../../model/task_list.dart';
@@ -66,78 +67,84 @@ class _TaskListingState extends State<TaskListing> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SelectedTaskListProvider>(
-      builder: (context, selectedTaskListProvider, _) {
-        final selectedTasklist = selectedTaskListProvider.selectedTasklist;
-        _taskList = (selectedTasklist == null || selectedTasklist.id == null) &&
-                _initialSetup
-            ? _taskList
-            : selectedTasklist;
+    return Scaffold(
+      floatingActionButton: VoiceCommandButton(
+        db: locator<DatabaseService>(),
+        parentContext: context,
+      ),
+      body: Consumer<SelectedTaskListProvider>(
+        builder: (context, selectedTaskListProvider, _) {
+          final selectedTasklist = selectedTaskListProvider.selectedTasklist;
+          _taskList = (selectedTasklist == null || selectedTasklist.id == null) &&
+                  _initialSetup
+              ? _taskList
+              : selectedTasklist;
 
-        if (_initialSetup) {
-          _initialSetup = false;
-        }
+          if (_initialSetup) {
+            _initialSetup = false;
+          }
 
-        if (_taskList == null || _taskList?.id == null) {
-          return const TaskListSelector();
-        }
-        final taskListId = _taskList?.id;
+          if (_taskList == null || _taskList?.id == null) {
+            return const TaskListSelector();
+          }
+          final taskListId = _taskList?.id;
 
-        return FutureBuilder<List<Task>>(
-          future: _databaseService.getTasks(taskListId!),
-          key: ValueKey('$_showCompleted-$_refreshKey'),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return loadingIndicator();
-            } else if (snapshot.hasError) {
-              return const Center(child: Text("Something went wrong :("));
-            } else {
-              _tasks = snapshot.data ?? [];
+          return FutureBuilder<List<Task>>(
+            future: _databaseService.getTasks(taskListId!),
+            key: ValueKey('$_showCompleted-$_refreshKey'),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return loadingIndicator();
+              } else if (snapshot.hasError) {
+                return const Center(child: Text("Something went wrong :("));
+              } else {
+                _tasks = snapshot.data ?? [];
 
-              bool allTasksCompleted = _tasks.isNotEmpty &&
-                  _tasks.every((task) => task.status == Status.completed);
+                bool allTasksCompleted = _tasks.isNotEmpty &&
+                    _tasks.every((task) => task.status == Status.completed);
 
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.download),
-                            onPressed: () => _exportTasks(context),
-                            tooltip: 'Export tasks',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.upload),
-                            onPressed: () => _importTasks(context),
-                            tooltip: 'Import tasks',
-                          ),
-                        ],
-                      ),
-                      buildSwitchWrapper("Show completed", allTasksCompleted),
-                    ],
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: buildTaskSlider(allTasksCompleted),
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.download),
+                              onPressed: () => _exportTasks(context),
+                              tooltip: 'Export tasks',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.upload),
+                              onPressed: () => _importTasks(context),
+                              tooltip: 'Import tasks',
+                            ),
+                          ],
+                        ),
+                        buildSwitchWrapper("Show completed", allTasksCompleted),
+                      ],
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: buildTaskSlider(allTasksCompleted),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              );
-            }
-          },
-        );
-      },
+                  ],
+                );
+              }
+            },
+          );
+        },
+      ),
     );
   }
 
